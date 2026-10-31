@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Brand palette from PRD §1.6 (derived from the official logo). Use these names in classes:
+   bg-primary, text-accent-gold, border-neutral-sky, … */
+@theme {
+  --color-primary-dark: #0f1a2e; /* Deep Navy — deep backgrounds, footer, contrast text */
+  --color-primary: #1b2a4a; /* Navy Blue — navbar, headers, dark cards */
+  --color-primary-light: #2c4a7b; /* Royal Blue — secondary accents, active links */
+  --color-accent-orange: #e8912a; /* Sunrise Orange — badges, notification dots */
+  --color-accent-gold: #d4a843; /* Gold Yellow — primary CTAs, highlights, active icons */
+  --color-accent-gold-light: #f0c75e; /* Bright Gold — gradient midpoints, hover glow */
+  --color-neutral-sky: #a8d8ea; /* Light Sky — card borders, subtle badges */
+  --color-neutral-light: #fdf8ef; /* Cream White — section backgrounds, page canvas */
+
+  /* Supporting tokens (not in the PRD palette). Gold and orange fail WCAG AA as text on light
+     backgrounds, so text uses gold-text; the PRD colours stay for fills, borders and icons (F19). */
+  --color-gold-text: #8a5a00;
+  --color-primary-50: #eef1f7; /* hover tint on light backgrounds */
+  --color-surface: #ffffff;
+  --color-ink: #0f1a2e;
+  --color-ink-soft: #4a4f5e;
+
+  /* SolaimanLipi is preferred once self-hosted (PRD §1.7); Noto Sans Bengali (next/font) is the loaded fallback. */
+  --font-sans: "SolaimanLipi", var(--font-noto-bengali), "Hind Siliguri", var(--font-inter), sans-serif;
+  --font-latin: var(--font-inter), var(--font-noto-bengali), sans-serif;
+}
+
+/* Core gradients (PRD §1.6) */
+@utility bg-hero {
+  background-image: linear-gradient(135deg, #0f1a2e 0%, #1b2a4a 45%, #2c4a7b 100%);
+}
+@utility bg-gold-cta {
+  background-image: linear-gradient(135deg, #d4a843 0%, #f0c75e 50%, #d4a843 100%);
+}
+@utility bg-sunrise {
+  background-image: linear-gradient(180deg, #e8912a 0%, #d4a843 50%, #f0c75e 100%);
+}
+@utility bg-card {
+  background-image: linear-gradient(180deg, #ffffff 0%, #fdf8ef 100%);
+}
+/* Hover glow for gold CTAs ("Bright Gold — hover glow shadows") */
+@utility glow-gold {
+  box-shadow: 0 0 0 1px rgb(240 199 94 / 0.6), 0 8px 24px -6px rgb(240 199 94 / 0.55);
+}
+
+body {
+  background: var(--color-neutral-light);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem; /* Bengali body text ≥ 16px (F19) */
+  line-height: 1.7;
+}
+
+html[lang="en"] body {
+  font-family: var(--font-latin);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent-gold);
+  outline-offset: 2px;
+}

@@ -105,6 +105,8 @@ Logged-in User browses Course Directory
 - **Homepage** with audience pathways: "I am a teacher", "I run a madrasa", "I am a parent"
 - **Course directory** — browse and filter all available courses
 - **Pillar pages** — detailed info about each service area
+- **সেবাপ্রাপ্ত প্রতিষ্ঠানসমূহ (Partner & Client Institutions Section)** — showcase of partner madrasas & schools
+- **মতামত ও রিভিউ সেকশন (Reviews & Ratings)** — verified student & muhtamim reviews, star ratings, video testimonials
 - **Knowledge Hub** — articles, research, guides, downloadable materials
 - **Case studies** — starting with Madrasatut Taqwa as the "Live Model"
 - **Events & webinars** — upcoming programs with registration
@@ -113,6 +115,7 @@ Logged-in User browses Course Directory
 ### Registered User Side (Login Required)
 - **User dashboard** — personal token, enrolled courses, application statuses
 - **Course enrollment** — fill form, upload payment proof, track status
+- **Course review submission** — rate 1-5 stars and write feedback after completing a course
 - **Profile management** — update personal info
 - **Enrollment history** — past and current courses
 
@@ -121,6 +124,7 @@ Logged-in User browses Course Directory
 |---|---|---|
 | User Registration | Everyone | Name, phone, email, institution, role → Email OTP verification |
 | Course Enrollment | Registered users | Course, batch, experience, payment method, transaction ID |
+| Course / Service Review | Enrolled users / Clients | Star rating (1-5), review title, detailed feedback, video link |
 | General Contact | Anyone | Name, phone, subject, message |
 | Parenting / Counselling Inquiry | Parents | Name, phone, child age, topic *(sensitive)* |
 | Institutional Consultancy Request | Institutions | Institution name, location, # students/teachers, challenges |
@@ -408,15 +412,17 @@ OTP Input:  4-6 separate boxes, auto-focus next, gold border on fill
 
 ## What's NOT in V1
 
-- Madrasatut Taqwa content and admissions
-- Monitoring software (full app)
-- Full LMS (video hosting, progress tracking, assessments)
-- Automated online payments (SSLCommerz, bKash API)
-- Certificate issuance & verification
-- Native mobile apps
-- Multi-institution client portals
-- Automated WhatsApp/SMS
-- E-commerce
+Full rationale: PRD §5 (Out of Scope Items).
+
+- **Madrasatut Taqwa content and admissions** — separate madrasa with its own portal; only outbound links + Live Model case summary here
+- **Monitoring software (full app)** — sensitive child data; V1 has the intro pillar page, system walkthrough and institutional waitlist form only. Full SaaS in Phase 2
+- **Full LMS** (self-hosted video, quizzes, progress tracking, grading) — V1 uses unlisted YouTube/Vimeo embeds
+- **Automated online payments** (SSLCommerz, bKash API) — manual bKash/Nagad TrxID avoids 2.5–3.5% gateway fees and merchant onboarding delays
+- **Automated certificate issuance & QR verification** — certificates issued physically or sent manually after evaluation; automation comes with the LMS in Phase 2
+- **Native mobile apps** — mobile-first web app (320px–430px) instead
+- **Automated WhatsApp/SMS** — no DLT registration or SMS cost; V1 uses Resend email + one-click WhatsApp click-to-chat
+- **Multi-institution client portals** — onboarding is consultancy-driven, managed by At-Taqwa's central staff
+- **E-commerce & book sales** — publications go through offline channels or PDFs in the Knowledge Hub
 - Languages beyond Bengali/English
 
 ## The Vision

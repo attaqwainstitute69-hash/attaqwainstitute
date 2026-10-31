@@ -4,7 +4,7 @@
 **Version:** 1.3 (Production-Ready Architecture)  
 **Date:** October 29, 2026  
 **Status:** Approved for Implementation  
-**Tech Stack:** Next.js 15 (App Router), TypeScript, Tailwind CSS, Framer Motion, Supabase  
+**Tech Stack:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Framer Motion | Express.js REST API | MongoDB Atlas (Mongoose)  
 **Primary Language:** Bengali (SolaimanLipi) | **Secondary Language:** English  
 
 ---
@@ -584,26 +584,37 @@ flowchart TD
 ```
 ┌────────────────────────────────────────────────────────┐
 │                   CLIENT APPLICATION                   │
-│   Next.js 15 (App Router) + TypeScript + Tailwind CSS │
-│        Framer Motion (Smooth Scroll & Animations)      │
+│  Next.js 16 (App Router) + React 19 + TypeScript       │
+│        Tailwind CSS v4 + Framer Motion (Animations)    │
 │   next/font/local (SolaimanLipi WOFF2, Zero CLS)       │
 │        @vercel/og (Dynamic Open Graph Social Cards)    │
+└──────────────────────────┬─────────────────────────────┘
+                           │  REST (JSON, HTTP-only cookie auth)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│               BACKEND API (backend/ folder)            │
+│     Express.js 5 + TypeScript (Layered Monolith)       │
+│   • Routes → Controllers → Services → Repositories     │
+│   • Zod validation, JWT auth, role guards              │
+│   • Rate limiting (OTP + general), Helmet, CORS        │
+│   • Post-approval event: email + unlock link/venue     │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│                  BACKEND & DATA LAYER                  │
-│               Supabase (PostgreSQL Database)           │
-│   • Row Level Security (RLS) on all user/course tables │
-│   • pg_trgm extension for Bengali search matching      │
-│   • Automated DB Trigger on enrollment status change   │
-│   • Supabase Storage (PDF resources & logo assets)     │
+│                       DATA LAYER                       │
+│          MongoDB Atlas (Mongoose ODM, Replica Set)     │
+│   • ACID transactions for race-proof seat booking      │
+│   • Unique & compound indexes, OTP TTL index           │
+│   • Text index for Bengali course search               │
+│   • Cloudflare R2 (PDF resources, logos, banners)      │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
 │             THIRD-PARTY SERVICES & DEPLOYMENT          │
-│   • Hosting & Edge CDN: Vercel (Production tier)       │
+│   • Web Hosting & Edge CDN: Vercel (Production tier)   │
+│   • API Hosting: own Node process (api.* subdomain)    │
 │   • Transactional Email & OTP: Resend API              │
 │   • Direct Messaging: WhatsApp Click-to-Chat           │
 │   • Analytics: Google Search Console + GA4             │

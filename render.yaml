@@ -1,0 +1,49 @@
+# Render Blueprint for the Express API (backend/). The Next.js frontend deploys on Vercel.
+# Secrets marked `sync: false` are entered once in the Render dashboard, never committed. See DEPLOY.md.
+services:
+  - type: web
+    name: attaqwa-api
+    runtime: node
+    rootDir: backend
+    # NODE_ENV=production makes npm skip devDependencies, but tsc lives there.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      # Render puts one load balancer in front of the service.
+      - key: TRUST_PROXY
+        value: "1"
+      - key: MONGODB_DB
+        value: attaqwa
+      - key: FRONTEND_URL
+        value: https://attaqwainstitute.org
+      - key: COOKIE_DOMAIN
+        value: .attaqwainstitute.org
+      - key: EMAIL_FROM
+        value: At-Taqwa Institute <no-reply@attaqwainstitute.org>
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OTP_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: BKASH_MERCHANT_NUMBER
+        sync: false
+      - key: NAGAD_MERCHANT_NUMBER
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
