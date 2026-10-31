@@ -4,6 +4,8 @@ services:
   - type: web
     name: attaqwa-api
     runtime: node
+    # free: sleeps after 15 min idle (first request ~1 min). Switch to starter for launch.
+    plan: free
     rootDir: backend
     # NODE_ENV=production makes npm skip devDependencies, but tsc lives there.
     buildCommand: npm ci --include=dev && npm run build
