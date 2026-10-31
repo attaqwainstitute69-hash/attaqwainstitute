@@ -4,7 +4,7 @@
 **Backend:** Express 5, TypeScript, Node.js ≥ 20.6 (Layered Service-Repository Pattern)  
 **Database:** MongoDB Atlas (Mongoose ODM, Replica Set with ACID Transactions)  
 **External Services:** Resend (Email OTP & transactional alerts), Cloudflare R2 / Cloudinary (PDFs, logos, banners)  
-**Base URL:** `https://api.attaqwainstitute.org/api/v1` (local: `http://localhost:5000/api/v1`)
+**Base URL:** `https://api.attaqwainstitute.com/api/v1` (local: `http://localhost:5000/api/v1`)
 
 **Related documents:**
 - [`architecture.md`](./architecture.md) — system topology, frontend rendering strategy, auth sequence
@@ -385,7 +385,7 @@ Status column: ✅ implemented · ⏳ planned (module not built yet).
    - A cross-origin `fetch` with JSON triggers a CORS preflight, which only `FRONTEND_URL` passes.
    - `originGuard` refuses any non-GET request whose `Origin` is not `FRONTEND_URL`, or whose `Sec-Fetch-Site` is `cross-site` (`403 FORBIDDEN`). Server-to-server calls send no `Origin` and pass.
 
-   Every subdomain of `attaqwainstitute.org` counts as *same-site*, so never host user-generated content on a subdomain.
+   Every subdomain of `attaqwainstitute.com` counts as *same-site*, so never host user-generated content on a subdomain.
 
 ### 5.2 Transport & Headers ✅
 

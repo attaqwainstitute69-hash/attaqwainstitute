@@ -80,7 +80,7 @@ Core educational catalog for online and offline offerings.
     }
   ],
   "trainerName": "মাওলানা মুফতি রফিকুল ইসলাম",
-  "trainerPhoto": "https://cdn.attaqwainstitute.org/trainers/rafiqul.webp",
+  "trainerPhoto": "https://cdn.attaqwainstitute.com/trainers/rafiqul.webp",
   "createdAt": "2026-10-30T01:00:00.000Z"
 }
 ```
@@ -132,7 +132,7 @@ Showcase of educational institutions receiving At-Taqwa management and monitorin
   "studentCount": 450,
   "teacherCount": 24,
   "badges": ["management_partner", "monitoring_partner", "trained_faculty"],
-  "logoUrl": "https://cdn.attaqwainstitute.org/institutions/taqwa-logo.webp",
+  "logoUrl": "https://cdn.attaqwainstitute.com/institutions/taqwa-logo.webp",
   "headName": "মাওলানা হাফিজুর রহমান",
   "headQuote": "আত-তাকওয়ার ৯-ধাপ মনিটরিং চালুর পর আমাদের শিক্ষার্থীদের পড়ার আগ্রহ ও শৃঙ্খলা অভাবনীয় বৃদ্ধি পেয়েছে।",
   "contactPhone": "01612417120",
@@ -190,9 +190,9 @@ Downloadable PDFs, SOP templates, guides, and research publications.
   "titleEn": "Madrasa Teacher Evaluation and Monitoring Checklist SOP",
   "category": "sop_template",
   "tags": ["monitoring", "sop", "evaluation"],
-  "fileUrl": "https://cdn.attaqwainstitute.org/sops/teacher-monitoring-sop.pdf",
+  "fileUrl": "https://cdn.attaqwainstitute.com/sops/teacher-monitoring-sop.pdf",
   "fileSize": 2450000,
-  "thumbnailUrl": "https://cdn.attaqwainstitute.org/sops/thumb-monitoring.webp",
+  "thumbnailUrl": "https://cdn.attaqwainstitute.com/sops/thumb-monitoring.webp",
   "author": "আত-তাকওয়া রিসার্চ সেল",
   "isPublished": true,
   "downloadsCount": 432,

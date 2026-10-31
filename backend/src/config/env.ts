@@ -14,11 +14,11 @@ const envSchema = z
     FRONTEND_URL: z.url(),
     JWT_SECRET: z.string().min(32),
     JWT_EXPIRES_IN_SECONDS: z.coerce.number().int().positive().default(7 * 24 * 60 * 60),
-    // Set to ".attaqwainstitute.org" in production so the Next.js server can read the cookie too.
+    // Set to ".attaqwainstitute.com" in production so the Next.js server can read the cookie too.
     COOKIE_DOMAIN: z.string().optional(),
     OTP_SECRET: z.string().min(32),
     RESEND_API_KEY: z.string().optional(),
-    EMAIL_FROM: z.string().default("At-Taqwa Institute <no-reply@attaqwainstitute.org>"),
+    EMAIL_FROM: z.string().default("At-Taqwa Institute <no-reply@attaqwainstitute.com>"),
     BKASH_MERCHANT_NUMBER: z.string().default(""),
     NAGAD_MERCHANT_NUMBER: z.string().default(""),
     // Cloudflare R2 (uploads). All five are needed; without them the upload endpoints answer 503.

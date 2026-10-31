@@ -2,7 +2,7 @@
 ## At-Taqwa Institute Digital Platform
 
 **API Version:** `v1` (spec `1.0.0`) — see [§1.8 API Versioning](#18-api-versioning)  
-**Base URL:** `https://api.attaqwainstitute.org/api/v1` (local: `http://localhost:5000/api/v1`)  
+**Base URL:** `https://api.attaqwainstitute.com/api/v1` (local: `http://localhost:5000/api/v1`)  
 **Backend:** Express.js (TypeScript), Layered Service-Repository pattern — see [`backend.md`](./backend.md)  
 **Database:** MongoDB Atlas / Mongoose — see [`database-schema.md`](./database-schema.md)  
 **Requirements Source:** [`At-Taqwa-Institute-PRD-v1.2.md`](./At-Taqwa-Institute-PRD-v1.2.md)  
@@ -132,7 +132,7 @@ Every response carries `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-R
 The **major** version is part of the URL path: `/api/v1/...`. A header-only scheme was not chosen because the Next.js ISR cache, the Vercel Edge CDN and browser devtools all key on the URL, so a version in the path keeps cached responses of different versions apart.
 
 ```
-https://api.attaqwainstitute.org/api/v1/courses
+https://api.attaqwainstitute.com/api/v1/courses
                                     └┬┘
                                major version
 ```
@@ -172,7 +172,7 @@ https://api.attaqwainstitute.org/api/v1/courses
    ```
    Deprecation: @1798761600
    Sunset: Sat, 01 May 2027 00:00:00 GMT
-   Link: <https://api.attaqwainstitute.org/api/v2/courses>; rel="successor-version"
+   Link: <https://api.attaqwainstitute.com/api/v2/courses>; rel="successor-version"
    ```
 3. A single endpoint can also be deprecated within a version (same headers, marked **Deprecated** in this document) before its removal in the next major.
 4. After the `Sunset` date every `v1` request returns `410 API_VERSION_SUNSET`.
@@ -186,7 +186,7 @@ See [`backend.md` §2](./backend.md#2-api-versioning--express-implementation).
 
 ```env
 # .env
-NEXT_PUBLIC_API_URL=https://api.attaqwainstitute.org/api/v1
+NEXT_PUBLIC_API_URL=https://api.attaqwainstitute.com/api/v1
 ```
 
 The version lives in one env variable, so moving the Next.js app to `v2` is a single config change plus fixes for the breaking items listed in the changelog.
@@ -620,7 +620,7 @@ All fields optional. **Response `200`:** updated user object (same shape as `/au
       "price": 3000,
       "status": "open",
       "trainerName": "মাওলানা মুফতি রফিকুল ইসলাম",
-      "trainerPhoto": "https://cdn.attaqwainstitute.org/trainers/rafiqul.webp",
+      "trainerPhoto": "https://cdn.attaqwainstitute.com/trainers/rafiqul.webp",
       "nextBatch": { "batchNo": 14, "startDate": "2026-11-15T00:00:00.000Z", "remainingSeats": 12, "isHouseful": false },
       "averageRating": 4.9,
       "totalReviews": 42
@@ -656,7 +656,7 @@ Uses aggregation *Pipeline 1* (`database.md` §6.1). `venueOrLink` is **never** 
     ],
     "trainerName": "মাওলানা মুফতি রফিকুল ইসলাম",
     "trainerBio": "১৫ বছরের শিক্ষক প্রশিক্ষণ অভিজ্ঞতা",
-    "trainerPhoto": "https://cdn.attaqwainstitute.org/trainers/rafiqul.webp",
+    "trainerPhoto": "https://cdn.attaqwainstitute.com/trainers/rafiqul.webp",
     "activeBatches": [
       {
         "_id": "6720f4d4e5f6a7b8c9d0e1f2",
@@ -702,7 +702,7 @@ Uses aggregation *Pipeline 1* (`database.md` §6.1). `venueOrLink` is **never** 
   ],
   "trainerName": "ড. আব্দুল্লাহ",
   "trainerBio": "শিশু মনোবিজ্ঞানী",
-  "trainerPhoto": "https://cdn.attaqwainstitute.org/trainers/abdullah.webp"
+  "trainerPhoto": "https://cdn.attaqwainstitute.com/trainers/abdullah.webp"
 }
 ```
 
@@ -978,7 +978,7 @@ Only `status: "active"`.
       "studentCount": 450,
       "teacherCount": 24,
       "badges": ["management_partner", "monitoring_partner", "trained_faculty"],
-      "logoUrl": "https://cdn.attaqwainstitute.org/institutions/taqwa-logo.webp",
+      "logoUrl": "https://cdn.attaqwainstitute.com/institutions/taqwa-logo.webp",
       "headName": "মাওলানা হাফিজুর রহমান",
       "headQuote": "আত-তাকওয়ার ৯-ধাপ মনিটরিং চালুর পর আমাদের শিক্ষার্থীদের পড়ার আগ্রহ ও শৃঙ্খলা অভাবনীয় বৃদ্ধি পেয়েছে।",
       "featured": true
@@ -1048,7 +1048,7 @@ Only `status: "active"`.
   "studentCount": 450,
   "teacherCount": 24,
   "badges": ["management_partner", "monitoring_partner"],
-  "logoUrl": "https://cdn.attaqwainstitute.org/institutions/taqwa-logo.webp",
+  "logoUrl": "https://cdn.attaqwainstitute.com/institutions/taqwa-logo.webp",
   "headName": "মাওলানা হাফিজুর রহমান",
   "headQuote": "...",
   "contactPhone": "01612417120",
@@ -1321,7 +1321,7 @@ Only `isPublished: true`.
       "category": "sop_template",
       "tags": ["monitoring", "sop", "evaluation"],
       "fileSize": 2450000,
-      "thumbnailUrl": "https://cdn.attaqwainstitute.org/sops/thumb-monitoring.webp",
+      "thumbnailUrl": "https://cdn.attaqwainstitute.com/sops/thumb-monitoring.webp",
       "author": "আত-তাকওয়া রিসার্চ সেল",
       "downloadsCount": 432,
       "createdAt": "2026-10-30T01:00:00.000Z"
@@ -1344,7 +1344,7 @@ Atomically `$inc: { downloadsCount: 1 }` and returns the file URL.
 ```json
 {
   "success": true,
-  "data": { "fileUrl": "https://cdn.attaqwainstitute.org/sops/teacher-monitoring-sop.pdf", "downloadsCount": 433 }
+  "data": { "fileUrl": "https://cdn.attaqwainstitute.com/sops/teacher-monitoring-sop.pdf", "downloadsCount": 433 }
 }
 ```
 
@@ -1361,9 +1361,9 @@ Atomically `$inc: { downloadsCount: 1 }` and returns the file URL.
   "titleEn": "Madrasa Teacher Evaluation and Monitoring Checklist SOP",
   "category": "sop_template",
   "tags": ["monitoring", "sop", "evaluation"],
-  "fileUrl": "https://cdn.attaqwainstitute.org/sops/teacher-monitoring-sop.pdf",
+  "fileUrl": "https://cdn.attaqwainstitute.com/sops/teacher-monitoring-sop.pdf",
   "fileSize": 2450000,
-  "thumbnailUrl": "https://cdn.attaqwainstitute.org/sops/thumb-monitoring.webp",
+  "thumbnailUrl": "https://cdn.attaqwainstitute.com/sops/thumb-monitoring.webp",
   "author": "আত-তাকওয়া রিসার্চ সেল",
   "isPublished": true
 }
@@ -1399,7 +1399,7 @@ The object key is generated by the server: `<folder>/<ulid>.<ext>`. Sending a vi
 {
   "success": true,
   "data": {
-    "url": "https://cdn.attaqwainstitute.org/resources/01jbx3k9q2m7v8w4t6r5y0z1ab.pdf",
+    "url": "https://cdn.attaqwainstitute.com/resources/01jbx3k9q2m7v8w4t6r5y0z1ab.pdf",
     "key": "resources/01jbx3k9q2m7v8w4t6r5y0z1ab.pdf",
     "fileSize": 2450000,
     "mimeType": "application/pdf"
@@ -1426,7 +1426,7 @@ Videos (up to 500 MB) do not pass through the API. Step 1 returns a presigned R2
     "method": "PUT",
     "headers": { "Content-Type": "video/mp4" },
     "key": "courses/01jbx3m2c4d6f8h0j2k4m6n8pq.mp4",
-    "url": "https://cdn.attaqwainstitute.org/courses/01jbx3m2c4d6f8h0j2k4m6n8pq.mp4",
+    "url": "https://cdn.attaqwainstitute.com/courses/01jbx3m2c4d6f8h0j2k4m6n8pq.mp4",
     "expiresIn": 900
   }
 }

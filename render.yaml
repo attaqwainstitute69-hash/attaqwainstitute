@@ -20,11 +20,11 @@ services:
       - key: MONGODB_DB
         value: attaqwa
       - key: FRONTEND_URL
-        value: https://attaqwainstitute.org
+        value: https://attaqwainstitute.com
       - key: COOKIE_DOMAIN
-        value: .attaqwainstitute.org
+        value: .attaqwainstitute.com
       - key: EMAIL_FROM
-        value: At-Taqwa Institute <no-reply@attaqwainstitute.org>
+        value: At-Taqwa Institute <no-reply@attaqwainstitute.com>
       - key: JWT_SECRET
         generateValue: true
       - key: OTP_SECRET

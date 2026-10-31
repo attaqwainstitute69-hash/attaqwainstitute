@@ -12,8 +12,8 @@
 
 Login cookie (`accessToken`) frontend ar API — duitate porte hobe, tai **duita ekoi domain er niche thakte hobe**:
 
-- Website: `attaqwainstitute.org` (ar `www.`)
-- API: `api.attaqwainstitute.org`
+- Website: `attaqwainstitute.com` (ar `www.`)
+- API: `api.attaqwainstitute.com`
 
 `*.vercel.app` ar `*.onrender.com` diye login kaj korbe na. Domain onno hole `render.yaml` er `FRONTEND_URL`, `COOKIE_DOMAIN`, `EMAIL_FROM` bodlate hobe.
 
@@ -25,7 +25,7 @@ Login cookie (`accessToken`) frontend ar API — duitate porte hobe, tai **duita
 
 ## 2. Resend (OTP email)
 
-1. resend.com → domain add (`attaqwainstitute.org`) → je DNS record dey, segulo domain e bosan → Verify.
+1. resend.com → domain add (`attaqwainstitute.com`) → je DNS record dey, segulo domain e bosan → Verify.
 2. API key banan → pore Render e `RESEND_API_KEY` e dibo.
 
 ## 3. Backend → Render
@@ -33,7 +33,7 @@ Login cookie (`accessToken`) frontend ar API — duitate porte hobe, tai **duita
 1. render.com → GitHub diye login → **New → Blueprint** → `attaqwainstitute` repo select.
 2. `render.yaml` theke `attaqwa-api` service banabe. `sync: false` gula chaibe: `MONGODB_URI`, `RESEND_API_KEY`, bKash/Nagad number, R2 er 5 ta (R2 pore dile upload 503 dibe, baki shob cholbe).
 3. Deploy shesh hole: `https://attaqwa-api.onrender.com/api/v1/health` → `ok` ashle thik.
-4. **Settings → Custom Domain** → `api.attaqwainstitute.org` add → je CNAME dey seta DNS e bosan.
+4. **Settings → Custom Domain** → `api.attaqwainstitute.com` add → je CNAME dey seta DNS e bosan.
 
 `JWT_SECRET` ar `OTP_SECRET` Render nije random baniye dey — kokhono bodlaben na (bodlale shobai logout).
 
@@ -44,14 +44,14 @@ Login cookie (`accessToken`) frontend ar API — duitate porte hobe, tai **duita
 
    | Key | Value |
    |---|---|
-   | `NEXT_PUBLIC_SITE_URL` | `https://attaqwainstitute.org` |
-   | `API_URL` | `https://api.attaqwainstitute.org/api/v1` |
-   | `NEXT_PUBLIC_API_URL` | `https://api.attaqwainstitute.org/api/v1` |
+   | `NEXT_PUBLIC_SITE_URL` | `https://attaqwainstitute.com` |
+   | `API_URL` | `https://api.attaqwainstitute.com/api/v1` |
+   | `NEXT_PUBLIC_API_URL` | `https://api.attaqwainstitute.com/api/v1` |
    | `ANTHROPIC_API_KEY` | AI chat er jonno (na dile chat bondho thakbe) |
    | `CHAT_MODEL` | `claude-sonnet-5-5` |
    | `NEXT_PUBLIC_MADRASATUT_TAQWA_URL` | Madrasatut Taqwa er site (optional) |
 
-3. Deploy → **Settings → Domains** → `attaqwainstitute.org` ar `www.attaqwainstitute.org` add → DNS record bosan.
+3. Deploy → **Settings → Domains** → `attaqwainstitute.com` ar `www.attaqwainstitute.com` add → DNS record bosan.
 
 ## 5. Prothom admin
 
@@ -65,7 +65,7 @@ Login cookie (`accessToken`) frontend ar API — duitate porte hobe, tai **duita
 
 ## 6. Live er por check
 
-- [ ] `https://attaqwainstitute.org` → `/bn` e jay, homepage ashe
+- [ ] `https://attaqwainstitute.com` → `/bn` e jay, homepage ashe
 - [ ] Register → email e OTP ashe → login hoy
 - [ ] `/admin` → course + batch banano jay → homepage e course dekhay
 - [ ] Ekta test enrollment → admin approve → email ashe → test data muche din
