@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t.Auth.loginTitle, robots: { index: false } };
 }
 
-// Returning-user login with email or token + OTP (PRD §3.2, Flow 2).
+// Returning-user login with email, mobile number or token + password.
 export default async function LoginPage() {
   return <AuthPage mode="login" locale={await getLocale()} t={await getDictionary()} />;
 }

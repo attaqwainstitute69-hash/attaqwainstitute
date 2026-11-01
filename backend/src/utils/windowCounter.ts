@@ -4,6 +4,12 @@ export function windowCounter(windowMs: number, limit: number, maxKeys = 50_000)
   const hits = new Map<string, { count: number; resetAt: number }>();
 
   return {
+    // True while the key is under its limit. Does not count a hit.
+    check(key: string): boolean {
+      const entry = hits.get(key);
+      return !entry || entry.resetAt <= Date.now() || entry.count < limit;
+    },
+
     // Counts one hit. Returns false when the key is over its limit for the current window.
     hit(key: string): boolean {
       const now = Date.now();

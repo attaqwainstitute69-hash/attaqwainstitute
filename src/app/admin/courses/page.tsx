@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "কোর্স ও ব্যাচ"
 
 const statusLabel: Record<CourseStatus, string> = { open: "ভর্তি চলছে", upcoming: "শীঘ্রই আসছে", closed: "ভর্তি বন্ধ" };
 const statusStyle: Record<CourseStatus, string> = {
-  open: "bg-[#1f7a4a]/10 text-[#1f7a4a]",
+  open: "bg-success/10 text-success",
   upcoming: "bg-neutral-sky/40 text-primary",
   closed: "bg-ink-soft/10 text-ink-soft",
 };

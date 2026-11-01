@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Inter, Noto_Sans_Bengali } from "next/font/google";
 import { getSessionUser } from "@/lib/api";
-import { roleLabel, type StaffRole } from "@/lib/admin";
+import { adminNav, roleLabel, type StaffRole } from "@/lib/admin";
 import { LogoutButton } from "@/components/logout-button";
+import { ThemeScript, ThemeToggle } from "@/components/theme";
 import "../globals.css";
 
 const notoBengali = Noto_Sans_Bengali({
@@ -21,32 +22,31 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const navItems = [
-  { href: "/admin", label: "ড্যাশবোর্ড" },
-  { href: "/admin/enrollments", label: "এনরোলমেন্ট যাচাই" },
-  { href: "/admin/courses", label: "কোর্স ও ব্যাচ" },
-];
-
 // Staff dashboard (PRD §2.2). Not localized and outside /[lang], so it has its own root layout.
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <html lang="bn" className={`${notoBengali.variable} ${inter.variable} h-full antialiased`}>
+    // Same theme choice as the website; ThemeScript sets data-theme before hydration.
+    <html lang="bn" data-theme="light" suppressHydrationWarning className={`${notoBengali.variable} ${inter.variable} h-full antialiased`}>
+      <head>
+        <ThemeScript />
+      </head>
       <body className="flex min-h-full flex-col">
         <header className="bg-hero text-white">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
             <Link href="/admin" className="flex items-center gap-2">
-              <Image src="/logo.jpg" alt="" width={36} height={36} className="rounded-full" />
+              <Image src="/logo.png" alt="" width={45} height={36} className="h-9 w-auto" />
               <span className="font-bold">অ্যাডমিন প্যানেল</span>
             </Link>
             <nav aria-label="অ্যাডমিন মেনু">
               <ul className="flex flex-wrap gap-1 text-sm">
-                {navItems.map((item) => (
-                  <li key={item.href}>
-                    <Link href={item.href} className="block rounded-md px-3 py-2 hover:bg-white/10">
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                <Suspense fallback={<NavLink href="/admin" label="ড্যাশবোর্ড" />}>
+                  <RoleNav />
+                </Suspense>
+                <li>
+                  <Link href="/bn/my-account#password" className="block rounded-md px-3 py-2 hover:bg-white/10">
+                    পাসওয়ার্ড
+                  </Link>
+                </li>
                 <li>
                   <Link href="/bn" className="block rounded-md px-3 py-2 text-accent-gold-light hover:bg-white/10">
                     ওয়েবসাইট ↗
@@ -54,9 +54,12 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
                 </li>
               </ul>
             </nav>
-            <Suspense fallback={null}>
-              <StaffBadge />
-            </Suspense>
+            <div className="flex items-center gap-2">
+              <ThemeToggle label="ডার্ক মোড" className="text-white hover:bg-white/10" />
+              <Suspense fallback={null}>
+                <StaffBadge />
+              </Suspense>
+            </div>
           </div>
           <div aria-hidden="true" className="h-1 bg-sunrise" />
         </header>
@@ -64,6 +67,24 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
       </body>
     </html>
   );
+}
+
+function NavLink({ href, label }: { href: string; label: string }) {
+  return (
+    <li>
+      <Link href={href} className="block rounded-md px-3 py-2 hover:bg-white/10">
+        {label}
+      </Link>
+    </li>
+  );
+}
+
+// Only the modules this role can open (PRD §2.2). Pages and the API still check the role themselves.
+async function RoleNav() {
+  const user = await getSessionUser();
+  const role = user?.role as StaffRole | undefined;
+  const items = role && role in roleLabel ? adminNav.filter((item) => item.allowed(role)) : adminNav.slice(0, 1);
+  return items.map((item) => <NavLink key={item.href} href={item.href} label={item.label} />);
 }
 
 async function StaffBadge() {

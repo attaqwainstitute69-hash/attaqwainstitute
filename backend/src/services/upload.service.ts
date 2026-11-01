@@ -29,6 +29,8 @@ const VIDEO_EXT: Record<(typeof VIDEO_MIME_TYPES)[number], string> = {
 };
 // Only keys this service generated: <video folder>/<ulid>.<video ext>
 const VIDEO_KEY_PATTERN = /^(courses|blog)\/[0-9a-z]{26}\.(mp4|webm|mov)$/;
+// Any key newKey() can produce.
+const OWN_KEY_PATTERN = new RegExp(`^(${UPLOAD_FOLDERS.join("|")})/[0-9a-z]{26}\\.[a-z0-9]+$`);
 
 function storage() {
   if (!r2) throw new AppError("SERVICE_UNAVAILABLE", 503, { reason: "STORAGE_NOT_CONFIGURED" });
@@ -118,5 +120,15 @@ export const uploadService = {
     }
 
     return { url: `${publicUrl}/${key}`, key, fileSize: head.ContentLength ?? 0, mimeType: type.mimeType };
+  },
+
+  // Removes an object this service uploaded. URLs outside our bucket (or with a key we did not
+  // generate) are left alone and return false.
+  async deleteByUrl(url: string): Promise<boolean> {
+    if (!r2 || !url.startsWith(`${r2.publicUrl}/`)) return false;
+    const key = url.slice(r2.publicUrl.length + 1);
+    if (!OWN_KEY_PATTERN.test(key)) return false;
+    await r2.client.send(new DeleteObjectCommand({ Bucket: r2.bucket, Key: key }));
+    return true;
   },
 };

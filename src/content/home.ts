@@ -13,10 +13,6 @@ export const extraStats: { value: number; suffix?: string; label: Text }[] = [];
 // Example: { title: { bn: "দৈনিক উপস্থিতি", en: "Daily attendance" } }
 export const monitoringSteps: { title: Text }[] = [];
 
-// S8 partner & client institutions. `logo` is an https image URL (e.g. uploaded to R2 from the admin panel).
-// Example: { name: { bn: "মারকাযুত তাকওয়া", en: "Markazut Taqwa" }, district: { bn: "ঢাকা", en: "Dhaka" } }
-export const partnerInstitutions: { name: Text; district: Text; logo?: string }[] = [];
-
 // S12 upcoming events & webinars. `date` is YYYY-MM-DD; past events are hidden automatically.
 // `registerUrl` is optional (a form or Facebook event link); without it the button opens WhatsApp.
 export const upcomingEvents: { title: Text; date: string; place: Text; registerUrl?: string }[] = [];

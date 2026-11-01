@@ -84,7 +84,7 @@ async function CourseList({
       key={label}
       href={to}
       aria-current={active ? "true" : undefined}
-      className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-primary aria-[current=true]:text-white"
+      className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-navy aria-[current=true]:text-white"
     >
       {label}
     </Link>
@@ -116,7 +116,7 @@ async function CourseList({
             aria-label={t.searchPlaceholder}
             className="min-h-11 w-full rounded-md border border-neutral-sky bg-surface px-3 lg:w-64"
           />
-          <button type="submit" className="min-h-11 rounded-md bg-primary px-4 font-semibold text-white hover:bg-primary-light">
+          <button type="submit" className="min-h-11 rounded-md bg-navy px-4 font-semibold text-white hover:bg-navy-light">
             {t.search}
           </button>
         </form>

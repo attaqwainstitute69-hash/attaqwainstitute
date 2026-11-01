@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { localePath, locales, type Locale } from "@/i18n/config";
 import { getDictionary, getLocale, type Dictionary } from "@/i18n/dictionaries";
-import { getCourse, hasSession } from "@/lib/api";
+import { getCourse, getMyWaitlists, getReviews, hasSession } from "@/lib/api";
 import type { Course } from "@/lib/api-types";
 import { courseTitle, fill, formatDate, formatNumber, formatPrice } from "@/lib/format";
 import { EnrollPanel } from "@/components/enroll-panel";
+import { WaitlistButton } from "@/components/waitlist-button";
+import { ReviewCard } from "@/components/reviews/review-card";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/courses/[slug]">): Promise<Metadata> {
   const { lang, slug } = await params;
@@ -157,9 +159,13 @@ async function CourseDetail({
               </div>
             </section>
           )}
+
+          <Suspense fallback={null}>
+            <CourseReviews courseId={course._id} locale={locale} t={t} />
+          </Suspense>
         </div>
 
-        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+        <aside id="enroll" className="scroll-mt-24 space-y-6 lg:sticky lg:top-24 lg:self-start">
           <Batches course={course} locale={locale} td={td} t={t.Courses} />
           <Suspense fallback={null}>
             <EnrollSlot course={course} locale={locale} t={t} />
@@ -167,6 +173,30 @@ async function CourseDetail({
         </aside>
       </div>
     </>
+  );
+}
+
+// Approved reviews of this course (PRD §3.7). Nothing is shown until one is published.
+async function CourseReviews({ courseId, locale, t }: { courseId: string; locale: Locale; t: Dictionary }) {
+  const result = await getReviews({ courseId, limit: 4 });
+  if (!result?.items.length) return null;
+
+  return (
+    <section>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h2 className="text-xl font-bold text-primary md:text-2xl">{t.Reviews.courseTitle}</h2>
+        <Link href={localePath(locale, "/reviews?category=course")} className="text-sm font-semibold text-gold-text hover:underline">
+          {t.Reviews.viewAll} →
+        </Link>
+      </div>
+      <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+        {result.items.map((r) => (
+          <li key={r._id}>
+            <ReviewCard review={r} locale={locale} t={t.Reviews} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -183,7 +213,7 @@ function Batches({ course, locale, td, t }: { course: Course; locale: Locale; td
               <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold text-primary">{fill(td.batch, { n: formatNumber(b.batchNo, locale) })}</span>
                 {b.isHouseful ? (
-                  <span className="rounded-full bg-accent-orange/15 px-2.5 py-0.5 font-semibold text-[#9a4d00]">{t.houseful}</span>
+                  <span className="rounded-full bg-accent-orange/15 px-2.5 py-0.5 font-semibold text-warn">{t.houseful}</span>
                 ) : (
                   <span className="rounded-full bg-neutral-sky/40 px-2.5 py-0.5 text-primary">
                     {fill(td.seats, { left: formatNumber(b.remainingSeats, locale), total: formatNumber(b.seatCapacity, locale) })}
@@ -210,15 +240,30 @@ async function EnrollSlot({ course, locale, t }: { course: Course; locale: Local
   if (course.status === "closed") {
     return <p className="rounded-xl border border-neutral-sky bg-surface p-5 text-sm text-ink-soft">{t.CourseDetail.closed}</p>;
   }
-  if (course.activeBatches.length === 0) return null;
+  // Only fetched for a logged-in user; it decides whether the waitlist button shows "already joined".
+  const onWaitlist = loggedIn ? Boolean((await getMyWaitlists())?.some((w) => w.courseId === course._id)) : false;
+  const title = courseTitle(course, locale);
+
+  // No batch open yet: pre-register for the next one (PRD §3.4.3).
+  if (course.activeBatches.length === 0) {
+    return (
+      <section className="space-y-3 rounded-xl border border-neutral-sky bg-surface p-5">
+        <h2 className="text-lg font-bold text-primary">{t.Enroll.noBatchTitle}</h2>
+        <p className="text-sm text-ink-soft">{t.Enroll.noBatchText}</p>
+        <WaitlistButton locale={locale} loggedIn={loggedIn} onWaitlist={onWaitlist} course={{ _id: course._id, slug: course.slug, title }} t={t.Enroll} errors={t.Errors} />
+      </section>
+    );
+  }
 
   return (
     <EnrollPanel
       locale={locale}
       loggedIn={loggedIn}
+      onWaitlist={onWaitlist}
       course={{
+        _id: course._id,
         slug: course.slug,
-        title: courseTitle(course, locale),
+        title,
         price: formatPrice(course.price, locale),
         paymentInfo: course.paymentInfo,
         batches: course.activeBatches.map((b) => ({

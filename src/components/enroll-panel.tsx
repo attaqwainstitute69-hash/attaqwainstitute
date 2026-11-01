@@ -7,12 +7,16 @@ import type { Dictionary } from "@/i18n/dictionaries";
 import { apiFetch } from "@/lib/api-client";
 import { fill } from "@/lib/format";
 import { whatsappLink } from "@/lib/site";
+import { PaymentIcon } from "./payment-icons";
+import { WaitlistButton } from "./waitlist-button";
 import { PaymentFields, paymentErrors, type PaymentValues } from "./payment-fields";
 
 type Props = {
   locale: Locale;
   loggedIn: boolean;
+  onWaitlist: boolean;
   course: {
+    _id: string;
     slug: string;
     title: string;
     price: string;
@@ -24,7 +28,7 @@ type Props = {
 };
 
 // Flow 3: choose batch → pay by bKash/Nagad → submit sender number + TrxID → "pending" (PRD §3.4).
-export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
+export function EnrollPanel({ locale, loggedIn, onWaitlist, course, t, errors }: Props) {
   const firstOpen = course.batches.find((b) => !b.isHouseful) ?? course.batches[0];
   const [batchId, setBatchId] = useState(firstOpen._id);
   const [values, setValues] = useState<PaymentValues>({ paymentMethod: "bkash", senderNumber: "", trxId: "" });
@@ -97,17 +101,9 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
       )}
 
       {batch.isHouseful ? (
-        // No waitlist API yet (api-spec §13 #1), so the waitlist goes through WhatsApp click-to-chat.
-        <div className="mt-4">
+        <div className="mt-4 space-y-3">
           <p className="text-sm text-ink-soft">{t.housefulText}</p>
-          <a
-            href={`${whatsappLink}?text=${encodeURIComponent(fill(t.waitlistMessage, { course: course.title }))}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-5 font-semibold text-white hover:bg-primary-light"
-          >
-            {t.joinWaitlist}
-          </a>
+          <WaitlistButton locale={locale} loggedIn={loggedIn} onWaitlist={onWaitlist} course={course} t={t} errors={errors} />
         </div>
       ) : !loggedIn ? (
         <div className="mt-4">
@@ -132,16 +128,15 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
           <div className="rounded-lg bg-neutral-light p-3 text-sm text-ink-soft">
             <p>{fill(t.step1, { fee: course.price })}</p>
             {course.paymentInfo.bkash || course.paymentInfo.nagad ? (
-              <ul className="mt-2 space-y-1 font-medium text-primary">
-                {course.paymentInfo.bkash && (
-                  <li>
-                    {t.bkash}: <span className="font-mono">{course.paymentInfo.bkash}</span>
-                  </li>
-                )}
-                {course.paymentInfo.nagad && (
-                  <li>
-                    {t.nagad}: <span className="font-mono">{course.paymentInfo.nagad}</span>
-                  </li>
+              <ul className="mt-2 space-y-2 font-medium text-primary">
+                {(["bkash", "nagad"] as const).map(
+                  (m) =>
+                    course.paymentInfo[m] && (
+                      <li key={m} className="flex items-center gap-2">
+                        <PaymentIcon method={m} />
+                        {t[m]}: <span className="font-mono">{course.paymentInfo[m]}</span>
+                      </li>
+                    ),
                 )}
               </ul>
             ) : (
@@ -171,7 +166,7 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
           </div>
 
           {error && (
-            <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-[#9a4d00]">
+            <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-warn">
               {error.text}{" "}
               {error.toAccount && (
                 <Link href={account} className="font-semibold underline">

@@ -4,11 +4,14 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { localePath, type Locale } from "@/i18n/config";
 import { getDictionary, getLocale, type Dictionary } from "@/i18n/dictionaries";
-import { getMyEnrollments, getSessionUser } from "@/lib/api";
-import type { MyEnrollment } from "@/lib/api-types";
+import { getMyEnrollments, getMyReviews, getMyWaitlists, getSessionUser } from "@/lib/api";
+import type { MyEnrollment, MyReview } from "@/lib/api-types";
 import { courseTitle, fill, formatDate, formatNumber } from "@/lib/format";
+import { LeaveWaitlist } from "@/components/leave-waitlist";
 import { LogoutButton } from "@/components/logout-button";
+import { ChangePasswordForm } from "@/components/password-forms";
 import { ResubmitForm } from "@/components/resubmit-form";
+import { Stars } from "@/components/reviews/review-card";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -34,7 +37,7 @@ async function Account({ locale, t }: { locale: Locale; t: Dictionary }) {
   const user = await getSessionUser();
   if (!user) redirect(`${localePath(locale, "/login")}?next=${encodeURIComponent(localePath(locale, "/my-account"))}`);
 
-  const enrollments = await getMyEnrollments();
+  const [enrollments, reviews, waitlists] = await Promise.all([getMyEnrollments(), getMyReviews(), getMyWaitlists()]);
   const ta = t.Account;
 
   return (
@@ -77,14 +80,88 @@ async function Account({ locale, t }: { locale: Locale; t: Dictionary }) {
           </ul>
         )}
       </section>
+
+      {waitlists && waitlists.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-bold text-primary">{ta.waitlistTitle}</h2>
+          <ul className="mt-4 space-y-3">
+            {waitlists.map((w) => (
+              <li key={w._id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-sky bg-surface p-4">
+                <div>
+                  {w.course ? (
+                    <Link href={localePath(locale, `/courses/${w.course.slug}`)} className="font-semibold text-primary hover:underline">
+                      {courseTitle(w.course, locale)}
+                    </Link>
+                  ) : (
+                    <p className="font-semibold text-primary">—</p>
+                  )}
+                  <p className="text-sm text-ink-soft">{fill(ta.waitlistSince, { date: formatDate(w.createdAt, locale) })}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="rounded-full bg-neutral-sky/40 px-3 py-1 text-xs font-semibold text-primary">
+                    {ta.waitlistStatus[w.status as keyof typeof ta.waitlistStatus] ?? w.status}
+                  </span>
+                  <LeaveWaitlist id={w._id} locale={locale} t={ta} errors={t.Errors} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="mt-10">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-bold text-primary">{t.Reviews.myReviews}</h2>
+          <Link href={localePath(locale, "/reviews/new")} className="text-sm font-semibold text-gold-text hover:underline">
+            {t.Reviews.write} →
+          </Link>
+        </div>
+        {reviews && reviews.length > 0 && (
+          <ul className="mt-4 space-y-3">
+            {reviews.map((r) => (
+              <li key={r._id}>
+                <MyReviewCard review={r} locale={locale} t={t} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section id="password" className="mt-10">
+        <h2 className="text-xl font-bold text-primary">{ta.passwordTitle}</h2>
+        <ChangePasswordForm locale={locale} hasPassword={user.hasPassword !== false} t={ta} auth={t.Auth} errors={t.Errors} />
+      </section>
     </>
+  );
+}
+
+const reviewStatusStyle: Record<MyReview["status"], string> = {
+  pending: "bg-neutral-sky/40 text-primary",
+  approved: "bg-success/10 text-success",
+  rejected: "bg-accent-orange/15 text-warn",
+};
+
+function MyReviewCard({ review: r, locale, t }: { review: MyReview; locale: Locale; t: Dictionary }) {
+  return (
+    <article className="rounded-xl border border-neutral-sky bg-surface p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <Stars rating={r.rating} label={fill(t.Reviews.stars, { n: formatNumber(r.rating, locale) })} />
+          <p className="mt-1 font-semibold text-primary">{r.reviewTitle}</p>
+          <p className="text-sm text-ink-soft">
+            {r.course ? courseTitle(r.course, locale) : t.Reviews.categories[r.reviewCategory]} · {formatDate(r.createdAt, locale)}
+          </p>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-sm font-semibold ${reviewStatusStyle[r.status]}`}>{t.Reviews.status[r.status]}</span>
+      </div>
+    </article>
   );
 }
 
 const statusStyle: Record<MyEnrollment["status"], string> = {
   pending: "bg-neutral-sky/40 text-primary",
-  approved: "bg-[#1f7a4a]/10 text-[#1f7a4a]",
-  rejected: "bg-accent-orange/15 text-[#9a4d00]",
+  approved: "bg-success/10 text-success",
+  rejected: "bg-accent-orange/15 text-warn",
 };
 
 function EnrollmentCard({ enrollment: e, locale, t }: { enrollment: MyEnrollment; locale: Locale; t: Dictionary }) {
@@ -134,10 +211,19 @@ function EnrollmentCard({ enrollment: e, locale, t }: { enrollment: MyEnrollment
         </div>
       )}
 
+      {e.canReview && (
+        <Link
+          href={`${localePath(locale, "/reviews/new")}?courseId=${e.course._id}`}
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-md border border-accent-gold px-5 font-semibold text-gold-text hover:bg-accent-gold/10"
+        >
+          <span aria-hidden="true">★</span> {t.Reviews.write}
+        </Link>
+      )}
+
       {e.status === "rejected" && (
         <div className="mt-4">
           {e.rejectionReason && (
-            <p className="rounded-lg bg-accent-orange/10 p-3 text-sm text-[#9a4d00]">
+            <p className="rounded-lg bg-accent-orange/10 p-3 text-sm text-warn">
               <span className="font-semibold">{ta.rejectedReason}:</span> {e.rejectionReason}
             </p>
           )}

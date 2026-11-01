@@ -20,9 +20,9 @@ const navItems = [
 ] as const;
 
 // `auth` is the login / my-account button, rendered on the server because the session cookie is HTTP-only.
-type Props = { locale: Locale; t: Dictionary["Nav"]; auth: ReactNode };
+type Props = { locale: Locale; t: Dictionary["Nav"]; auth: ReactNode; theme: ReactNode };
 
-export function SiteHeader({ locale, t, auth }: Props) {
+export function SiteHeader({ locale, t, auth, theme }: Props) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -35,27 +35,33 @@ export function SiteHeader({ locale, t, auth }: Props) {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-sky/60 bg-surface/90 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2">
-        <Link href={localePath(locale)} className="flex items-center gap-2">
-          <Image src="/logo.jpg" alt="" width={44} height={44} priority className="rounded-full" />
-          <span className="text-lg font-bold text-primary">
+    // Navy in both themes so it runs straight into the hero, as in the reference design.
+    <header className="site-header sticky top-0 z-40 border-b border-white/10 bg-primary-dark/95 text-white backdrop-blur transition-shadow">
+      <div aria-hidden="true" className="scroll-progress absolute inset-x-0 bottom-0 h-0.5 bg-gold-cta" />
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
+        <Link href={localePath(locale)} className="flex shrink-0 items-center gap-2.5">
+          <span className="rounded-lg bg-white p-0.5">
+            <Image src="/logo.png" alt="" width={50} height={40} priority className="h-10 w-auto" />
+          </span>
+          {/* Hidden on phones and at xl, where the buttons and the full menu need the room. */}
+          <span className="hidden text-lg leading-tight font-bold sm:inline xl:hidden 2xl:inline">
             {locale === "bn" ? "আত-তাকওয়া ইনস্টিটিউট" : "At-Taqwa Institute"}
           </span>
         </Link>
 
-        <nav aria-label={t.menu} className="hidden lg:block">
+        <nav aria-label={t.menu} className="hidden xl:block">
           <ul className="flex items-center">{links}</ul>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Suspense fallback={<LanguageSwitch locale={locale} t={t} pathname={null} />}>
             <CurrentLanguageSwitch locale={locale} t={t} />
           </Suspense>
+          {theme}
           {auth}
           <button
             type="button"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-primary hover:bg-primary-50 lg:hidden"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-white hover:bg-white/10 xl:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((v) => !v)}
@@ -69,7 +75,7 @@ export function SiteHeader({ locale, t, auth }: Props) {
       </div>
 
       {open && (
-        <nav id="mobile-nav" aria-label={t.menu} className="border-t border-neutral-sky/60 px-4 pb-4 lg:hidden">
+        <nav id="mobile-nav" aria-label={t.menu} className="border-t border-white/10 px-4 pb-4 xl:hidden">
           <ul className="flex flex-col">{links}</ul>
         </nav>
       )}
@@ -93,7 +99,7 @@ function NavLinks({ locale, t, pathname, onNavigate }: LinkProps & { pathname: s
           href={href}
           aria-current={active ? "page" : undefined}
           onClick={onNavigate}
-          className="block rounded-md px-3 py-2.5 text-[0.95rem] text-primary hover:bg-primary-50 aria-[current=page]:font-semibold aria-[current=page]:text-primary-light"
+          className="block rounded-full px-3 py-2.5 text-[0.95rem] whitespace-nowrap text-white/80 transition hover:text-white xl:px-2.5 xl:text-sm aria-[current=page]:font-semibold aria-[current=page]:text-accent-gold-light"
         >
           {t[key]}
         </Link>
@@ -115,7 +121,7 @@ function LanguageSwitch({ locale, t, pathname }: { locale: Locale; t: Dictionary
       href={href}
       hrefLang={otherLocale}
       lang={otherLocale}
-      className="inline-flex min-h-11 items-center rounded-md border border-neutral-sky px-3 text-sm text-primary hover:bg-primary-50"
+      className="inline-flex min-h-10 items-center rounded-full px-3 text-sm whitespace-nowrap text-white/80 transition hover:bg-white/10 hover:text-white"
     >
       {t.switchLanguage}
     </Link>

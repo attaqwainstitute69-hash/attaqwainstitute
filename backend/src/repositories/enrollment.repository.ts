@@ -1,5 +1,6 @@
 import { Types, type PipelineStage } from "mongoose";
 import { Enrollment, type IEnrollment } from "../models/Enrollment.model";
+import { escapeRegex } from "../utils/escapeRegex";
 import type { ClientSession } from "./transaction";
 
 export type CreateEnrollmentInput = Pick<
@@ -15,8 +16,6 @@ export interface AdminEnrollmentFilter {
   batchId?: string;
   q?: string;
 }
-
-const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // enrollment → batch → course, shared by the user and admin views.
 const batchAndCourseLookup: PipelineStage.FacetPipelineStage[] = [
@@ -52,7 +51,8 @@ export const enrollmentRepository = {
 
   // "My enrollments" with course + batch summary. `venueOrLink` is projected only when approved (api-spec §7.2).
   listForUser(userId: string, filter: { status?: IEnrollment["status"]; id?: string } = {}) {
-    const match: Record<string, unknown> = { userId: new Types.ObjectId(userId) };
+    const user = new Types.ObjectId(userId);
+    const match: Record<string, unknown> = { userId: user };
     if (filter.status) match.status = filter.status;
     if (filter.id) match._id = new Types.ObjectId(filter.id);
 
@@ -60,6 +60,29 @@ export const enrollmentRepository = {
       { $match: match },
       { $sort: { createdAt: -1 } },
       ...batchAndCourseLookup,
+      // A live (pending / approved) review of this course by this user hides the "রিভিউ দিন" button.
+      {
+        $lookup: {
+          from: "reviews",
+          let: { courseId: "$course._id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$courseId", "$$courseId"] },
+                    { $eq: ["$userId", user] },
+                    { $in: ["$status", ["pending", "approved"]] },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+            { $project: { _id: 1 } },
+          ],
+          as: "myReview",
+        },
+      },
       {
         $project: {
           status: 1,
@@ -80,10 +103,20 @@ export const enrollmentRepository = {
             $cond: [{ $eq: ["$status", "approved"] }, { venueOrLink: "$batch.venueOrLink" }, null],
           },
           canResubmit: { $eq: ["$status", "rejected"] },
-          // Reviews API (api-spec §10) is not built yet, so nobody can review.
-          canReview: { $literal: false },
+          // api-spec §10.3: only an approved learner, once per course.
+          canReview: { $and: [{ $eq: ["$status", "approved"] }, { $eq: [{ $size: "$myReview" }, 0] }] },
         },
       },
+    ]);
+  },
+
+  // Distinct courses where this user has an approved enrollment (review eligibility, api-spec §10.5).
+  approvedCoursesForUser(userId: string, courseId?: string) {
+    return Enrollment.aggregate<{ _id: Types.ObjectId; titleBn: string; titleEn?: string; slug: string }>([
+      { $match: { userId: new Types.ObjectId(userId), status: "approved" } },
+      ...batchAndCourseLookup,
+      ...(courseId ? [{ $match: { "course._id": new Types.ObjectId(courseId) } }] : []),
+      { $group: { _id: "$course._id", titleBn: { $first: "$course.titleBn" }, titleEn: { $first: "$course.titleEn" }, slug: { $first: "$course.slug" } } },
     ]);
   },
 

@@ -33,3 +33,21 @@ export async function apiFetch<T>(
     return { ok: false, code: "NETWORK_ERROR", message: "" };
   }
 }
+
+// POST /admin/uploads (api-spec §12.1): an image, or a PDF in "resources", stored on R2.
+export async function apiUpload(
+  file: File,
+  folder: "institutions" | "resources" | "thumbnails",
+): Promise<ApiResult<{ url: string; key: string; fileSize: number; mimeType: string }>> {
+  const form = new FormData();
+  form.append("folder", folder);
+  form.append("file", file);
+  try {
+    const res = await fetch(`${API_URL}/admin/uploads`, { method: "POST", credentials: "include", headers: { Accept: "application/json" }, body: form });
+    const json = await res.json().catch(() => null);
+    if (json?.success) return { ok: true, data: json.data };
+    return { ok: false, code: json?.error?.code ?? "INTERNAL_ERROR", message: json?.error?.message ?? "" };
+  } catch {
+    return { ok: false, code: "NETWORK_ERROR", message: "" };
+  }
+}

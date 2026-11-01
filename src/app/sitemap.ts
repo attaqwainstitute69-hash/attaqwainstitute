@@ -3,8 +3,8 @@ import { localePath, locales } from "@/i18n/config";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-// Static routes for now; CMS content (courses, articles, events) gets added once MongoDB is wired up.
-const paths = ["/"];
+// Static routes for now; course detail pages, articles and events get added later.
+const paths = ["/", "/courses", "/reviews", "/consultancy", "/institutions", "/digital", "/resources", "/counselling", "/about", "/contact", "/events"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return paths.flatMap((path) =>

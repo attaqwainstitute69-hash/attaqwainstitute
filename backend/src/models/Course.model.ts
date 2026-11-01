@@ -6,6 +6,13 @@ export const COURSE_FORMATS = ["online", "offline", "hybrid"] as const;
 export const COURSE_STATUSES = ["open", "upcoming", "closed"] as const;
 export const MEDIA_KINDS = ["image", "video"] as const;
 
+// The syllabus is embedded because it is bounded and small (database-schema.md §3, <50KB).
+export const SYLLABUS_LIMITS = { modules: 50, topicsPerModule: 30, textLength: 300, maxBytes: 50_000 } as const;
+
+export function syllabusByteSize(syllabus: unknown): number {
+  return Buffer.byteLength(JSON.stringify(syllabus ?? []), "utf8");
+}
+
 export interface ISyllabusModule {
   moduleNo: number;
   titleBn: string;
@@ -69,7 +76,14 @@ const courseSchema = new Schema<ICourse>(
     status: { type: String, enum: COURSE_STATUSES, default: "open" },
     descriptionBn: { type: String, required: true },
     descriptionEn: { type: String },
-    syllabus: [syllabusModuleSchema],
+    syllabus: {
+      type: [syllabusModuleSchema],
+      validate: {
+        validator: (v: ISyllabusModule[]) =>
+          v.length <= SYLLABUS_LIMITS.modules && syllabusByteSize(v) <= SYLLABUS_LIMITS.maxBytes,
+        message: `Syllabus must have at most ${SYLLABUS_LIMITS.modules} modules and stay under 50KB`,
+      },
+    },
     trainerName: { type: String },
     trainerBio: { type: String },
     trainerPhoto: { type: String },
@@ -79,6 +93,7 @@ const courseSchema = new Schema<ICourse>(
   { timestamps: true },
 );
 
-courseSchema.index({ titleBn: "text", descriptionBn: "text" });
+// Bengali text index (database-schema.md §4). Bangla has no stemmer, so "none" keeps whole words.
+courseSchema.index({ titleBn: "text", descriptionBn: "text" }, { default_language: "none" });
 
 export const Course = model<ICourse>("Course", courseSchema);

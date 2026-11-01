@@ -14,11 +14,16 @@
     "contact": "Contact",
     "menu": "Menu",
     "switchLanguage": "বাংলা",
+    "darkMode": "Dark mode",
     "login": "Log in",
-    "myAccount": "My Account"
+    "register": "Sign up",
+    "myAccount": "My Account",
+    "reviews": "Reviews"
   },
   "Home": {
     "heroTitle": "System-based, sustainable, high-quality Islamic education",
+    "marks": { "hero": "Islamic education", "audience": "your path", "pillars": "core pillars", "featured": "courses", "method": "we work", "institutions": "Institutions", "trainers": "trainers", "cta": "today" },
+    "heroCourseLabel": "Now enrolling",
     "heroText": "By combining modern management science with Islamic values, we help move madrasa education from person-dependency to system-dependency.",
     "ctaPrograms": "Explore Programs",
     "ctaConsult": "Request a Consultation",
@@ -157,6 +162,7 @@
     "seatsLeft": "{n} seats left",
     "houseful": "Houseful",
     "details": "View details",
+    "enroll": "Enroll",
     "reviews": "{n} reviews",
     "prev": "Previous",
     "next": "Next",
@@ -189,9 +195,9 @@
     "login": "Log in",
     "register": "Register",
     "chooseBatch": "Choose a batch",
-    "step1": "1. Send the course fee of {fee} to the merchant number below (use the Payment option).",
+    "step1": "1. Send the course fee of {fee} to the number below (use the Send Money option).",
     "step2": "2. Enter the number you paid from and the transaction ID (TrxID).",
-    "merchantMissing": "Contact us on WhatsApp for the merchant number.",
+    "merchantMissing": "Contact us on WhatsApp for the payment number.",
     "method": "Payment method",
     "bkash": "bKash",
     "nagad": "Nagad",
@@ -210,14 +216,21 @@
     "joinWaitlist": "Join the waitlist",
     "waitlistMessage": "Assalamu alaikum, I'd like to join the waitlist for the next batch of \"{course}\".",
     "pinWarning": "Never share your bKash/Nagad PIN or OTP with anyone.",
-    "alreadyApplied": "You have already applied to this batch. Check its status in My Account."
+    "alreadyApplied": "You have already applied to this batch. Check its status in My Account.",
+    "waitlistLogin": "Log in or register to join the waitlist. No payment needed.",
+    "waitlistJoining": "Joining…",
+    "waitlistJoined": "You are on the waitlist (number {n}). We will contact you when a new batch opens.",
+    "waitlistAlready": "You are on the waitlist for this course. We will contact you when a new batch opens.",
+    "waitlistWhatsapp": "Or tell us on WhatsApp",
+    "noBatchTitle": "Next batch",
+    "noBatchText": "The next batch date has not been announced yet. Join the waitlist and we will let you know as soon as it opens."
   },
   "Auth": {
     "loginTitle": "Log in",
-    "loginIntro": "Enter your registered email or your unique token (ATQ-YYYY-XXXXX). We'll email you a 6-digit code.",
+    "loginIntro": "Enter your registered email, mobile number or unique token (ATQ-YYYY-XXXXX) and your password.",
     "registerTitle": "Register",
-    "registerIntro": "No password needed. Fill in your details, confirm the 6-digit code we email you, and get your unique token.",
-    "identifier": "Email or token",
+    "registerIntro": "Fill in your details, choose a password, and get your unique token.",
+    "identifier": "Email, mobile number or token",
     "fullName": "Full name",
     "phone": "Mobile number",
     "phoneHint": "e.g. 01712345678",
@@ -240,10 +253,10 @@
     "noAccount": "No account yet?",
     "haveAccount": "Already have an account?",
     "emailExists": "An account with this email already exists. Please log in.",
-    "notFound": "No account found for this email or token.",
+    "notFound": "No account found for this email, mobile number or token.",
     "networkError": "Can't reach the server. Check your connection and try again.",
     "tokenTitle": "Your unique token",
-    "tokenText": "Keep this token. You can log in with it instead of your email.",
+    "tokenText": "Keep this token. You can log in with it and your password instead of your email.",
     "continue": "Continue",
     "copy": "Copy",
     "copied": "Copied",
@@ -255,7 +268,29 @@
       "student": "Student",
       "researcher": "Researcher",
       "other": "Other"
-    }
+    },
+    "password": "Password",
+    "passwordHint": "At least 8 characters",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "loginSubmit": "Log in",
+    "registerSubmit": "Create account",
+    "submitting": "Please wait…",
+    "invalidCredentials": "Incorrect email/mobile/token or password.",
+    "forgotLink": "Forgot password?",
+    "forgotTitle": "Forgot password",
+    "forgotIntro": "Enter your registered email, mobile number or token. We'll email a link to set a new password.",
+    "forgotSubmit": "Send reset link",
+    "forgotSent": "If an account exists, we've sent a reset link to its registered email. It is valid for 30 minutes — check your spam folder too.",
+    "backToLogin": "Back to login",
+    "resetTitle": "Set a new password",
+    "resetIntro": "Choose a new password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "resetSubmit": "Save password",
+    "resetDone": "Your password has been changed. Log in with the new password.",
+    "resetMissing": "This reset link is incomplete. Request a new one.",
+    "requestNewLink": "Request a new link"
   },
   "Account": {
     "title": "My Account",
@@ -277,7 +312,330 @@
     "resubmit": "Re-submit TrxID",
     "resubmitTitle": "New payment details",
     "cancel": "Cancel",
-    "resubmitted": "New TrxID submitted. We'll let you know after verification."
+    "resubmitted": "New TrxID submitted. We'll let you know after verification.",
+    "waitlistTitle": "My waitlist",
+    "waitlistSince": "Joined: {date}",
+    "passwordTitle": "Password",
+    "passwordIntro": "Changing your password signs you out on every other device.",
+    "setPasswordIntro": "Your account has no password yet. Set one to log in with your email, mobile or token.",
+    "currentPassword": "Current password",
+    "changePassword": "Change password",
+    "setPassword": "Set password",
+    "passwordChanged": "Password changed.",
+    "waitlistStatus": {
+      "waiting": "Waiting",
+      "contacted": "Contacted"
+    },
+    "leaveWaitlist": "Leave the waitlist",
+    "leaving": "Leaving…"
+  },
+  "Reviews": {
+    "title": "Reviews & Ratings",
+    "intro": "Feedback from verified learners, institution heads and parents on our courses, consultancy and parenting programmes. Every review is checked by an admin before it is published.",
+    "homeTitle": "What learners and parents say",
+    "homeText": "Only verified learners and parents — no anonymous reviews.",
+    "courseTitle": "Learner reviews",
+    "viewAll": "See all reviews",
+    "write": "Write a review",
+    "categories": {
+      "all": "All reviews",
+      "course": "Courses & training",
+      "consultancy": "Institutional consultancy",
+      "parenting": "Parenting & counselling"
+    },
+    "average": "Average rating",
+    "basedOn": "Based on {n} reviews",
+    "stars": "{n} out of 5 stars",
+    "starRow": "{n} stars",
+    "verifiedStudent": "Verified learner",
+    "verifiedHead": "Verified institution head",
+    "watchVideo": "Watch video",
+    "videoOnly": "Video reviews only",
+    "empty": "No reviews have been published in this category yet.",
+    "unavailable": "Reviews can't be loaded right now. Please try again shortly.",
+    "loading": "Loading reviews…",
+    "formTitle": "Write a review",
+    "formIntro": "Your review will be published with your name after an admin checks it.",
+    "category": "Review about",
+    "course": "Course",
+    "chooseCourse": "Choose a course",
+    "noEligible": "Course reviews need an approved enrollment. You have either reviewed all your approved courses already, or none has been approved yet.",
+    "parentingNote": "Took part in a parenting programme or counselling? Share your experience. An admin will verify it before publishing.",
+    "rating": "Rating",
+    "role": "Who you are",
+    "rolePlaceholder": "e.g. Hifz teacher, Markazut Taqwa",
+    "reviewTitle": "Review title",
+    "body": "Your experience",
+    "video": "Video link (optional)",
+    "videoHint": "YouTube or Facebook video / reel link",
+    "consent": "I allow my name, role and review to be published on the website.",
+    "submit": "Submit review",
+    "submitting": "Submitting…",
+    "submitted": "Thank you! Your review has been submitted and will be published after approval.",
+    "backToAccount": "Back to my account",
+    "myReviews": "My reviews",
+    "status": {
+      "pending": "Under review",
+      "approved": "Published",
+      "rejected": "Not published"
+    },
+    "errors": {
+      "NOT_ELIGIBLE": "You don't have an approved enrollment in this course, so you can't review it.",
+      "ALREADY_REVIEWED": "You have already submitted a review for this.",
+      "rating": "Choose a star rating.",
+      "role": "Tell us who you are.",
+      "title": "The title needs at least 3 characters.",
+      "body": "Your experience needs at least 10 characters.",
+      "video": "Only YouTube or Facebook video links are allowed.",
+      "consent": "Please allow publishing.",
+      "course": "Choose a course."
+    }
+  },
+  "Consultancy": {
+    "title": "Consultancy & Institutional Development",
+    "intro": "We help madrasas and schools move from person-dependency to system-dependency through management SOPs, curriculum development and institutional audits.",
+    "servicesTitle": "Our services",
+    "services": [
+      {
+        "title": "Management SOPs",
+        "text": "Written, tested procedures for administration, finance and staff management."
+      },
+      {
+        "title": "Curriculum development",
+        "text": "Step-based curricula and assessment for Hifz, Maktab and general divisions."
+      },
+      {
+        "title": "Institutional audits",
+        "text": "An assessment of where your institution stands and a concrete roadmap forward."
+      },
+      {
+        "title": "Faculty training packages",
+        "text": "Institution-specific training and follow-up for your teachers."
+      }
+    ],
+    "processTitle": "How it works",
+    "process": [
+      "Share your institution's details in the form below",
+      "Our consultancy team contacts you within 48 hours",
+      "Institutional audit and MOU signing",
+      "Your institution joins our partner network"
+    ],
+    "viewInstitutions": "See partner institutions",
+    "formTitle": "Request service for your institution",
+    "formIntro": "Only our consultancy team sees this information."
+  },
+  "Institutions": {
+    "title": "Partner Institutions",
+    "intro": "Madrasas and schools implementing our management SOPs, training and monitoring model.",
+    "empty": "The partner list will be published soon.",
+    "unavailable": "The list cannot be loaded right now. Please try again shortly.",
+    "loading": "Loading…",
+    "students": "{n} students",
+    "teachers": "{n} teachers",
+    "featured": "Featured partner",
+    "badges": {
+      "management_partner": "Management partner",
+      "monitoring_partner": "Monitoring partner",
+      "trained_faculty": "Trained faculty"
+    },
+    "cta": "Request service for your institution",
+    "viewAll": "See all institutions"
+  },
+  "Digital": {
+    "title": "Digital Education & Monitoring",
+    "intro": "The 9-Step Student Monitoring System, the Knowledge Hub and digital video resources.",
+    "walkthroughTitle": "How the system works",
+    "walkthrough": [
+      {
+        "title": "Teachers record daily",
+        "text": "From lessons to behaviour — progress logged every day in a fixed format."
+      },
+      {
+        "title": "Parents stay involved",
+        "text": "Home tasks and progress are shared with parents regularly."
+      },
+      {
+        "title": "Heads review",
+        "text": "Weekly and monthly reports support timely decisions."
+      }
+    ],
+    "waitlistTitle": "Join the institutional waitlist",
+    "waitlistIntro": "The software launches in a later phase. Interested institutions can sign up now; we will contact you before launch.",
+    "hubTitle": "Knowledge Hub",
+    "hubText": "Read and download research papers, guides and SOP templates for free.",
+    "hubCta": "Go to the Knowledge Hub"
+  },
+  "Resources": {
+    "title": "Knowledge Hub",
+    "intro": "Articles, guides, SOP templates and research papers for teachers, heads of institutions and researchers.",
+    "all": "All",
+    "categories": {
+      "article": "Articles",
+      "guide": "Guides",
+      "sop_template": "SOP templates",
+      "research": "Research"
+    },
+    "categoryLabel": "Category",
+    "searchPlaceholder": "Search resources",
+    "search": "Search",
+    "empty": "No resources have been published yet.",
+    "unavailable": "Resources cannot be loaded right now. Please try again shortly.",
+    "loading": "Loading…",
+    "by": "By {author}",
+    "downloads": "{n} downloads",
+    "download": "Download",
+    "downloading": "Opening…",
+    "noFile": "File coming soon",
+    "downloadFailed": "The file could not be opened. Please try again."
+  },
+  "Counselling": {
+    "title": "Conscious Parent Program",
+    "intro": "Practical guidance on screen addiction, adolescence, behaviour and attention — in a course or in private counselling.",
+    "courseTitle": "Parent courses",
+    "courseText": "Attend regular classes in a batch with other parents.",
+    "courseCta": "See courses",
+    "formTitle": "Confidential counselling request",
+    "formIntro": "Your information is stored as confidential. Only the super admin and the assigned counsellor can see it.",
+    "parentName": "Parent's name",
+    "phone": "Mobile number",
+    "childAge": "Child's age",
+    "childAgePlaceholder": "e.g. 12 years",
+    "problemCategory": "Type of concern",
+    "chooseCategory": "Choose one",
+    "problems": {
+      "behavioral": "Behavioural issues",
+      "screen_addiction": "Screen / mobile addiction",
+      "inattention": "Inattention in studies",
+      "adolescence": "Adolescence challenges",
+      "other": "Other"
+    },
+    "preferredTime": "Preferred time for a call",
+    "preferredTimePlaceholder": "e.g. 7–9 pm",
+    "message": "Describe the concern briefly",
+    "submit": "Send request",
+    "submitting": "Sending…",
+    "successTitle": "Your request was submitted confidentially.",
+    "successText": "A counsellor will call you soon. Reference number: {ref}",
+    "errors": {
+      "parentName": "Enter your name (at least 2 characters).",
+      "childAge": "Enter your child's age.",
+      "problemCategory": "Choose the type of concern.",
+      "preferredTime": "Enter a preferred time.",
+      "message": "Describe the concern in at least 20 characters."
+    }
+  },
+  "InstitutionForm": {
+    "name": "Institution name",
+    "district": "District",
+    "studentCount": "Number of students",
+    "teacherCount": "Number of teachers",
+    "optional": "(optional)",
+    "headName": "Name of the head of institution",
+    "contactPhone": "Contact mobile number",
+    "serviceNeeded": "Services needed",
+    "services": {
+      "management_sop": "Management SOPs",
+      "teacher_training": "Teacher training",
+      "monitoring_system": "9-Step Monitoring System",
+      "other": "Other"
+    },
+    "message": "Anything else you would like to tell us?",
+    "submit": "Send request",
+    "submitting": "Sending…",
+    "successTitle": "Your request has been received.",
+    "successText": "Our consultancy team will contact you within 48 hours. Reference number: {ref}",
+    "errors": {
+      "name": "Enter the institution name (at least 3 characters).",
+      "district": "Enter the district.",
+      "headName": "Enter the head's name (at least 3 characters).",
+      "serviceNeeded": "Choose at least one service."
+    }
+  },
+  "About": {
+    "title": "About Us",
+    "intro": "At-Taqwa Institute, established in 2019 in Savar, Dhaka, works to modernize Islamic education and madrasa management in Bangladesh by combining modern management science with Islamic ethical values.",
+    "problemTitle": "The problems we solve",
+    "problems": [
+      "Many madrasas depend on one person; when they are away, the work stops.",
+      "Written standard operating procedures (SOPs) for administration, finance and teaching are often missing.",
+      "Teachers rarely get regular, systematic training in pedagogy."
+    ],
+    "pillarsTitle": "Our three core pillars",
+    "separationTitle": "Our relationship with Madrasatut Taqwa",
+    "separationText": "At-Taqwa Institute and Madrasatut Taqwa are sister initiatives with separate roles. The Institute works on teacher training, institutional consultancy, parent education and research. The residential Hifz madrasa, maktab and student admissions belong to Madrasatut Taqwa.",
+    "ctaTitle": "Want to work with us?",
+    "ctaText": "Enroll in a course, get consultancy for your institution, or talk to us directly.",
+    "ctaCourses": "See courses",
+    "ctaContact": "Contact us"
+  },
+  "Contact": {
+    "title": "Contact",
+    "intro": "Choose the right path for what you need — or reach us directly by phone, email or WhatsApp.",
+    "bannerEyebrow": "We are here for you",
+    "formEyebrow": "Send us a message",
+    "formTitle": "Tell us what you need",
+    "formText": "Fill in the form and press send. WhatsApp opens with your message ready; just tap Send there.",
+    "form": {
+      "name": "Your name",
+      "phone": "Mobile number (optional)",
+      "email": "Email (optional)",
+      "subject": "Subject",
+      "chooseSubject": "Choose a subject",
+      "other": "Other",
+      "message": "Message",
+      "send": "Send via WhatsApp",
+      "nameError": "Please enter your name.",
+      "messageError": "Please write a message of at least 10 characters.",
+      "sent": "WhatsApp opened in a new tab. If it did not, press the button again."
+    },
+    "infoEyebrow": "Get in touch",
+    "infoTitle": "Talk to us directly",
+    "followUs": "Follow us",
+    "helpTitle": "How can we help?",
+    "paths": [
+      {
+        "key": "course",
+        "title": "Course enrollment",
+        "text": "See online and offline courses, batch dates and fees.",
+        "cta": "See courses"
+      },
+      {
+        "key": "institution",
+        "title": "Institutional consultancy",
+        "text": "SOPs, audits and teacher training for your madrasa or school.",
+        "cta": "Send a request"
+      },
+      {
+        "key": "parent",
+        "title": "Parent counselling",
+        "text": "Request confidential guidance about your child.",
+        "cta": "Send a request"
+      },
+      {
+        "key": "account",
+        "title": "My application",
+        "text": "Questions about payment review, class links or your TrxID? Check your account first.",
+        "cta": "My account"
+      }
+    ],
+    "facebook": "Facebook page",
+    "hours": "We usually reply within 24 hours."
+  },
+  "Events": {
+    "title": "Events & Upcoming Batches",
+    "intro": "Seminars, webinars and the next batch dates of our courses.",
+    "eventsTitle": "Upcoming events & webinars",
+    "noEvents": "No events are scheduled right now. Follow our Facebook page for news of new events.",
+    "batchesTitle": "Upcoming course batches",
+    "noBatches": "No batch dates have been announced right now.",
+    "unavailable": "Course information cannot be loaded right now.",
+    "loading": "Loading…",
+    "batch": "Batch {n}",
+    "starts": "Starts {date}",
+    "seatsLeft": "{n} seats left",
+    "houseful": "Houseful",
+    "details": "Details & enrollment",
+    "followFacebook": "See our Facebook page"
   },
   "Errors": {
     "VALIDATION_ERROR": "Some fields are invalid. Please check and try again.",
@@ -295,7 +653,13 @@
     "generic": "Something went wrong. Please try again shortly.",
     "phone": "Enter a valid 11-digit mobile number (e.g. 01712345678).",
     "trxId": "TrxID must be 8–15 letters and digits.",
-    "otp": "Enter the 6-digit code."
+    "otp": "Enter the 6-digit code.",
+    "ALREADY_WAITLISTED": "You are already on the waitlist for this course.",
+    "PHONE_NOT_UNIQUE": "Several accounts share this mobile number and password. Please log in with your email or token.",
+    "password": "Password must be at least 8 characters.",
+    "passwordMismatch": "The two passwords don't match.",
+    "WRONG_PASSWORD": "Your current password is incorrect.",
+    "RESET_TOKEN_INVALID": "This reset link is invalid or has expired. Request a new one."
   },
   "NotFound": {
     "title": "Page not found",

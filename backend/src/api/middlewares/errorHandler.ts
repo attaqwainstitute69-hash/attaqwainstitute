@@ -15,6 +15,9 @@ const DUPLICATE_KEY_CODES: Record<string, ErrorCode> = {
   trxId: "DUPLICATE_TRXID",
   "userId,batchId": "ALREADY_ENROLLED",
   "userId,courseId": "ALREADY_REVIEWED",
+  "userId,institutionId": "ALREADY_REVIEWED",
+  "userId,reviewCategory": "ALREADY_REVIEWED",
+  "courseId,userId": "ALREADY_WAITLISTED",
 };
 
 interface MongoLikeError {

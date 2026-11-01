@@ -1,7 +1,7 @@
 # API Specification
 ## At-Taqwa Institute Digital Platform
 
-**API Version:** `v1` (spec `1.0.0`) — see [§1.8 API Versioning](#18-api-versioning)  
+**API Version:** `v1` (spec `1.1.0`) — see [§1.8 API Versioning](#18-api-versioning)  
 **Base URL:** `https://api.attaqwainstitute.com/api/v1` (local: `http://localhost:5000/api/v1`)  
 **Backend:** Express.js (TypeScript), Layered Service-Repository pattern — see [`backend.md`](./backend.md)  
 **Database:** MongoDB Atlas / Mongoose — see [`database-schema.md`](./database-schema.md)  
@@ -14,7 +14,7 @@
 
 ### 1.1 Authentication
 
-Authentication is **passwordless (Email OTP)**. On successful OTP verification the server sets a signed JWT in an HTTP-only cookie:
+The website uses **email / mobile / token + password** ([§3.5](#35-post-authregister--public)–[§3.9](#39-post-authchange-password--user)). The passwordless Email OTP endpoints ([§3.1](#31-post-authrequest-otp--public)–[§3.2](#32-post-authverify-otp--public)) still work, but the website no longer calls them. On a successful register, login or password change the server sets a signed JWT in an HTTP-only cookie:
 
 ```
 Set-Cookie: accessToken=<JWT>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800
@@ -74,7 +74,10 @@ Full error handling rules are in [§1.9 Error Handling](#19-error-handling).
 | 400 | `MALFORMED_JSON` | Request body is not valid JSON |
 | 400 | `INVALID_STATE` | Action not allowed in current status (e.g. approving a non-pending enrollment) |
 | 401 | `UNAUTHENTICATED` | Missing / expired / invalid `accessToken` cookie |
+| 400 | `WRONG_PASSWORD` | `POST /auth/change-password` with a wrong `currentPassword` |
+| 400 | `RESET_TOKEN_INVALID` | Password reset link is unknown, expired (30 min) or already used |
 | 401 | `OTP_INVALID` | Wrong OTP code |
+| 401 | `INVALID_CREDENTIALS` | Login with an unknown email/mobile/token, a wrong password, or an OTP-only account that has no password yet (one code for all three) |
 | 403 | `FORBIDDEN` | Role not allowed, or resource belongs to another user |
 | 403 | `NOT_ELIGIBLE` | e.g. review without an approved enrollment |
 | 404 | `NOT_FOUND` | Resource does not exist |
@@ -84,6 +87,7 @@ Full error handling rules are in [§1.9 Error Handling](#19-error-handling).
 | 409 | `DUPLICATE_KEY` | Unique field already exists (`slug`, `batchNo` per course, etc.) |
 | 409 | `ALREADY_REVIEWED` | User already reviewed this course |
 | 409 | `EMAIL_EXISTS` | Registration with an already registered email |
+| 409 | `PHONE_NOT_UNIQUE` | Login by mobile number where two or more accounts on that number have the same password |
 | 409 | `DUPLICATE_TRXID` | TrxID already used on a non-rejected enrollment |
 | 409 | `ALREADY_ENROLLED` | User already has a non-rejected enrollment in the batch |
 | 409 | `BATCH_FULL` | `enrolledCount >= seatCapacity` |
@@ -92,7 +96,7 @@ Full error handling rules are in [§1.9 Error Handling](#19-error-handling).
 | 413 | `PAYLOAD_TOO_LARGE` | JSON body > 100 KB or upload above file limit |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Wrong `Content-Type` or file type not allowed |
 | 429 | `OTP_COOLDOWN` | Resend requested within 60 seconds |
-| 429 | `RATE_LIMITED` | More than 3 OTP requests / 15 min, or general limit exceeded |
+| 429 | `RATE_LIMITED` | A limit in [§1.7](#17-rate-limits) was exceeded. `details.reason: "LOGIN_LOCKED"` after 10 wrong passwords for one identifier in 15 min |
 | 500 | `INTERNAL_ERROR` | Unexpected server error |
 | 502 | `EMAIL_DELIVERY_FAILED` | Resend failed to send the OTP email |
 | 503 | `SERVICE_UNAVAILABLE` | Database unreachable, or a seat-booking transaction conflicted and retries ran out |
@@ -109,6 +113,9 @@ List endpoints accept: `?page=1&limit=20&sort=-createdAt`. `limit` max is `100`.
 | `trxId` | `^[A-Za-z0-9]{8,15}$`, stored uppercase |
 | `token` | `^ATQ-\d{4}-[A-Z0-9]{5}$` |
 | `otp` | `^\d{6}$` |
+| `password` | 8–72 characters. Login accepts 1–72, so a short wrong password gets `INVALID_CREDENTIALS`, not a validation error |
+| login `identifier` | email, token `ATQ-YYYY-XXXXX`, or mobile. A mobile is normalized to `01XXXXXXXXX` (`+88` / `88` prefix, spaces and dashes removed) |
+| reset `token` | `^[a-f0-9]{64}$` |
 | `rating` | integer `1`–`5` |
 | `:id` params | valid MongoDB `ObjectId` |
 
@@ -119,6 +126,9 @@ List endpoints accept: `?page=1&limit=20&sort=-createdAt`. `limit` max is `100`.
 | General API | 100 requests / IP / 15 min |
 | `POST /auth/request-otp` | 3 requests / email+IP / 15 min, plus 60 s cooldown between sends |
 | `POST /auth/verify-otp` | 3 wrong attempts invalidate the OTP |
+| `POST /auth/register` | 10 / IP / hour |
+| `POST /auth/login`, `/auth/reset-password`, `/auth/change-password` | 10 / IP / 15 min each. Login also: 10 wrong passwords / identifier / 15 min from any IP → `429 RATE_LIMITED` (`LOGIN_LOCKED`) |
+| `POST /auth/forgot-password` | 3 / identifier + IP / 15 min, plus 5 reset emails / account / 24 h (further requests still answer `200` but send nothing) |
 | Public forms (`/counselling-requests`, `/institutions/requests`) | 5 requests / IP / hour |
 
 Every response carries `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset` headers. A `429` also carries `Retry-After` (seconds).
@@ -195,6 +205,7 @@ The version lives in one env variable, so moving the Next.js app to `v2` is a si
 
 | Spec Version | Date | Type | Changes |
 |---|---|---|---|
+| `1.1.0` | 2026-11-01 | Minor | Password auth: `POST /auth/register`, `/auth/login` (email, mobile or token), `/auth/forgot-password`, `/auth/reset-password`, `/auth/change-password`. New error codes `INVALID_CREDENTIALS`, `WRONG_PASSWORD`, `RESET_TOKEN_INVALID`, `PHONE_NOT_UNIQUE`. `GET /auth/me` adds `hasPassword`. The OTP endpoints stay. |
 | `1.0.0` | 2026-10-31 | Initial | First release: 54 endpoints for Auth, Users, Courses, Batches, Enrollments, Institutions, Counselling, Reviews, Resources, Uploads. |
 
 ---
@@ -286,7 +297,7 @@ Some side effects run **after** the main DB write. Their failure must **not** tu
 | `PATCH /admin/reviews/:id/moderate` | ISR revalidation of `/`, `/reviews`, course page | Response still `200`. Page refreshes on the next ISR window. |
 | `DELETE /admin/resources/:id` | Delete file from R2 | DB record deleted. Orphan file logged for cleanup job. |
 
-Only `POST /auth/request-otp` treats email failure as a hard error (`502`), because the user cannot continue without the OTP.
+Only `POST /auth/request-otp` treats email failure as a hard error (`502`), because the user cannot continue without the OTP. `POST /auth/forgot-password` does the opposite: a failed reset email is only logged and the response is the same `200`, so the endpoint never shows whether an account exists.
 
 #### 1.9.8 Client Handling Guide (Next.js)
 
@@ -297,6 +308,10 @@ Only `POST /auth/request-otp` treats email failure as a hard error (`502`), beca
 | `FORBIDDEN` | Show "এই পেজে আপনার প্রবেশাধিকার নেই" page. |
 | `NOT_FOUND`, `INVALID_ID` | Render Next.js `notFound()` (404 page). |
 | `EMAIL_EXISTS` | Switch the form to the login flow with the email pre-filled. |
+| `INVALID_CREDENTIALS` | Show the message above the login form; keep the identifier, clear the password, offer "Forgot password?". |
+| `PHONE_NOT_UNIQUE` | Ask the user to log in with their email or token instead of the mobile number. |
+| `WRONG_PASSWORD` | Show the error under the "current password" field. |
+| `RESET_TOKEN_INVALID` | Show the message with a link to `/forgot-password` for a new link. |
 | `OTP_INVALID` | Shake the 6-box input, show `details.attemptsLeft`. |
 | `OTP_EXPIRED` | Clear OTP input, enable "Resend OTP". |
 | `OTP_COOLDOWN` | Start the countdown from `details.retryAfterSeconds`. |
@@ -318,10 +333,15 @@ Only `POST /auth/request-otp` treats email failure as a hard error (`502`), beca
 | # | Method | Path | Auth | Purpose |
 |---|---|---|---|---|
 | **Auth** |||||
-| 1 | `POST` | `/auth/request-otp` | 🌐 Public | Send 6-digit OTP (register or login) |
-| 2 | `POST` | `/auth/verify-otp` | 🌐 Public | Verify OTP, create user (register), set session cookie |
+| 1 | `POST` | `/auth/request-otp` | 🌐 Public | Send 6-digit OTP (register or login). Not used by the website |
+| 2 | `POST` | `/auth/verify-otp` | 🌐 Public | Verify OTP, create user (register), set session cookie. Not used by the website |
 | 3 | `POST` | `/auth/logout` | 🔐 User | Clear session cookie |
 | 4 | `GET` | `/auth/me` | 🔐 User | Current logged-in user |
+| 4a | `POST` | `/auth/register` | 🌐 Public | Register with a password, set session cookie |
+| 4b | `POST` | `/auth/login` | 🌐 Public | Log in with email / mobile / token + password |
+| 4c | `POST` | `/auth/forgot-password` | 🌐 Public | Email a password reset link (30 min, single use) |
+| 4d | `POST` | `/auth/reset-password` | 🌐 Public | Set a new password from the link, sign out every device |
+| 4e | `POST` | `/auth/change-password` | 🔐 User | Change (or first set) the password, sign out other devices |
 | **Users** |||||
 | 5 | `PATCH` | `/users/me` | 🔐 User | Update own profile |
 | 6 | `GET` | `/admin/users` | 🛡️ Admin | List / search users |
@@ -390,6 +410,8 @@ Only `POST /auth/request-otp` treats email failure as a hard error (`502`), beca
 ## 3. Auth
 
 ### 3.1 `POST /auth/request-otp` — 🌐 Public
+
+> The website uses the password endpoints (§3.5–§3.9). §3.1–§3.2 stay available so OTP login can be switched back on.
 
 Sends a 6-digit OTP to the user's email via Resend. Hashed OTP is stored in `otps` with a 10-minute TTL.
 
@@ -526,11 +548,140 @@ Returns the current session user. Used by the navbar ("Token / Auth CTA") and ro
     "email": "ahmadullah@example.com",
     "role": "madrasa_teacher",
     "institution": "মারকাযুত তাকওয়া ঢাকা",
-    "isVerified": true
+    "isVerified": true,
+    "hasPassword": true
   }
 }
 ```
+`hasPassword` is `false` for an account made with the old OTP flow that has not set a password yet. `/my-account` then asks only for a new password, not the current one.
+
 **Errors:** `401 UNAUTHENTICATED`
+
+---
+
+### 3.5 `POST /auth/register` — 🌐 Public
+
+Creates the account with a password and logs the user in straight away. There is no email verification step.
+
+**Request**
+```json
+{
+  "email": "ahmadullah@example.com",
+  "password": "a-long-secret",
+  "fullName": "মাওলানা আহমাদুল্লাহ",
+  "phone": "01712345678",
+  "role": "madrasa_teacher",
+  "institution": "মারকাযুত তাকওয়া ঢাকা",
+  "privacyConsent": true
+}
+```
+
+Field rules are the registration rules of [§3.2](#32-post-authverify-otp--public), plus `password` (8–72 characters). The password is stored as a scrypt hash, never in plain text.
+
+**Response `201`** + `Set-Cookie: accessToken=...`. Same body as a §3.2 registration: `message: "আপনার ইউনিক টোকেন: ATQ-…"`, `data.user`, `isNewUser: true`, `redirectTo: "/my-account"`.
+
+**Errors:** `409 EMAIL_EXISTS` · `400 VALIDATION_ERROR` · `429 RATE_LIMITED`
+
+---
+
+### 3.6 `POST /auth/login` — 🌐 Public
+
+**Request**
+```json
+{
+  "identifier": "01712345678",
+  "password": "a-long-secret"
+}
+```
+
+| Field | Type | Required | Rule |
+|---|---|---|---|
+| `identifier` | string | ✅ | email, token `ATQ-YYYY-XXXXX`, or mobile number (`01712345678`, `+880 1712-345678`, …) |
+| `password` | string | ✅ | 1–72 characters |
+
+A mobile number is not unique, because one family can share a number. The server checks the password against every account on that number (at most 5) and logs in the one that matches. If two of them have the same password, it answers `409 PHONE_NOT_UNIQUE` and the user logs in with email or token.
+
+**Response `200`** + `Set-Cookie: accessToken=...`
+```json
+{
+  "success": true,
+  "message": "সফলভাবে লগইন হয়েছে",
+  "data": {
+    "user": { "_id": "6720f1a1b1c2d3e4f5a6b7c8", "token": "ATQ-2026-87K2M", "...": "same shape as §3.2" },
+    "isNewUser": false,
+    "redirectTo": "/my-account"
+  }
+}
+```
+`redirectTo` is `/admin` for `super_admin`, `content_editor` and `counsellor`.
+
+**Errors:** `401 INVALID_CREDENTIALS` (unknown account, wrong password, or no password set yet; same code and similar timing for all three) · `409 PHONE_NOT_UNIQUE` · `429 RATE_LIMITED` (`LOGIN_LOCKED` after 10 wrong passwords for this identifier in 15 min)
+
+---
+
+### 3.7 `POST /auth/forgot-password` — 🌐 Public
+
+Emails a reset link to the account's registered email: `{FRONTEND_URL}/{lang}/reset-password?token=<64 hex>`. The link is valid for **30 minutes** and works **once**. `lang` comes from `Accept-Language` (`bn` by default). Only a SHA-256 hash of the token is stored, and asking again replaces the previous link.
+
+**Request**
+```json
+{ "identifier": "ahmadullah@example.com" }
+```
+`identifier` takes the same values as login. A mobile number shared by several accounts sends a separate link to each account's email.
+
+**Response `200`**, the same whether or not an account exists:
+```json
+{ "success": true, "message": "অ্যাকাউন্ট থাকলে রেজিস্টার্ড ইমেইলে রিসেট লিংক পাঠানো হয়েছে", "data": null }
+```
+
+**Errors:** `400 VALIDATION_ERROR` · `429 RATE_LIMITED`
+
+---
+
+### 3.8 `POST /auth/reset-password` — 🌐 Public
+
+**Request**
+```json
+{
+  "token": "9f2c…(64 hex characters)",
+  "password": "a-new-long-secret"
+}
+```
+
+Sets the new password, clears the reset token and increments `sessionVersion`, so **every device is signed out**. This browser's cookie is cleared too, and the user then logs in with the new password.
+
+**Response `200`**
+```json
+{ "success": true, "message": "পাসওয়ার্ড পরিবর্তন হয়েছে, নতুন পাসওয়ার্ড দিয়ে লগইন করুন", "data": null }
+```
+
+**Errors:** `400 RESET_TOKEN_INVALID` (unknown, expired or already used) · `400 VALIDATION_ERROR` · `429 RATE_LIMITED`
+
+---
+
+### 3.9 `POST /auth/change-password` — 🔐 User
+
+**Request**
+```json
+{
+  "currentPassword": "a-long-secret",
+  "newPassword": "a-new-long-secret"
+}
+```
+
+| Field | Type | Required | Rule |
+|---|---|---|---|
+| `currentPassword` | string | ✅ if `hasPassword` | not needed when an OTP-only account sets its first password |
+| `newPassword` | string | ✅ | 8–72 characters |
+
+Every other device is signed out (`sessionVersion` increments). This device gets a fresh `accessToken` cookie and stays logged in.
+
+**Response `200`** + `Set-Cookie: accessToken=...`
+```json
+{ "success": true, "message": "পাসওয়ার্ড পরিবর্তন হয়েছে", "data": null }
+```
+
+**Errors:** `400 WRONG_PASSWORD` · `400 VALIDATION_ERROR` · `401 UNAUTHENTICATED` · `429 RATE_LIMITED`
 
 ---
 
@@ -1459,12 +1610,13 @@ These come from the PRD but are not yet supported by `database-schema.md`. Each 
 
 | # | PRD Requirement | Gap | Suggested Fix |
 |---|---|---|---|
-| 1 | **Waitlist** ("ওয়েটলিস্টে যুক্ত হোন", PRD §3.4) | No collection stores waitlist entries. | Add a `waitlists` collection `{ userId, courseId, createdAt }` + `POST /waitlists` (🔐 User) and `GET /admin/waitlists` (🛡️ Admin). |
-| 2 | **Institutional intake** (`serviceNeeded`, `message`) | `institutions` has no fields for these. | Add `serviceNeeded: string[]` and `intakeMessage: string` to `Institution`, or a separate `institution_requests` collection. |
+| 1 | **Waitlist** ("ওয়েটলিস্টে যুক্ত হোন", PRD §3.4) | ✅ Resolved: `waitlists` collection `{ userId, courseId, status: waiting/contacted/enrolled/cancelled }`, one live entry per user per course. `POST /waitlists`, `GET /waitlists/me`, `PATCH /waitlists/me/:id/cancel` (🔐 User); `GET /admin/waitlists`, `PATCH /admin/waitlists/:id` (🛡️ Admin). Duplicate → 409 `ALREADY_WAITLISTED`. | — |
+| 2 | **Institutional intake** (`serviceNeeded`, `message`) | ✅ Resolved: `Institution` has `serviceNeeded` (`management_sop`, `teacher_training`, `monitoring_system`, `other`) and `intakeMessage`. | — |
 | 3 | **Review consent checkbox** | `reviews` has no `consent` field. | Add `consentGiven: boolean` + `consentAt: Date` to `Review` for audit. |
 | 4 | **One review per user per course** | No unique index. | Add a partial unique index `{ userId: 1, courseId: 1 }` where `courseId` exists. |
 | 5 | **Duplicate enrollment check** | `{ userId, batchId }` index is not unique. | Make it a partial unique index where `status != "rejected"`. |
 | 6 | **"Course completed" condition for reviews** | No completion field on enrollments. | Add `completedAt` to `Enrollment`, or treat batch `startDate` + duration as completion. |
+| 8 | **Counselling data encrypted** (PRD Flow 5) | ✅ Resolved: `parentName`, `phone`, `message`, `confidentialNotes` are AES-256-GCM encrypted at rest (`utils/fieldCrypto.ts`, key `DATA_ENCRYPTION_KEY`). The API still returns plain text to authorized staff. Older plaintext records: `npm run counselling:encrypt`. | — |
 | 7 | **Homepage stats counters (S6), Events/Webinars (S12), Trainers (S11)** | No collections. | Serve from static config/CMS in V1, or add collections in a later sprint. |
 
 ---

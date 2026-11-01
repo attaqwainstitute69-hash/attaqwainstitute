@@ -11,6 +11,7 @@ export function SiteFooter({ locale, t }: Props) {
   const quickLinks = [
     { label: t.Nav.home, path: "/" },
     { label: t.Nav.training, path: "/courses" },
+    { label: t.Nav.reviews, path: "/reviews" },
     { label: t.Nav.myAccount, path: "/my-account" },
     { label: t.Nav.login, path: "/login" },
   ];
@@ -27,7 +28,7 @@ export function SiteFooter({ locale, t }: Props) {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Link href={localePath(locale)} className="flex items-center gap-2">
-            <Image src="/logo.jpg" alt="" width={44} height={44} className="rounded-full" />
+            <Image src="/logo.png" alt="" width={55} height={44} className="h-11 w-auto rounded-lg bg-white p-1" />
             <span className="text-lg font-bold">{site.name[locale]}</span>
           </Link>
           <p className="mt-4 text-sm text-white/70">{t.Footer.tagline}</p>

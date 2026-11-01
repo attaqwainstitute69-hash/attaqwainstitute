@@ -223,7 +223,7 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
                 <button
                   type="button"
                   onClick={() => setModules((ms) => ms.filter((_, j) => j !== i))}
-                  className="text-sm text-[#9a4d00] underline"
+                  className="text-sm text-warn underline"
                 >
                   মুছুন
                 </button>
@@ -295,7 +295,7 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
       </Section>
 
       {message && (
-        <p role="status" className={`rounded-md p-3 text-sm ${message.ok ? "bg-[#1f7a4a]/10 text-[#1f7a4a]" : "bg-accent-orange/10 text-[#9a4d00]"}`}>
+        <p role="status" className={`rounded-md p-3 text-sm ${message.ok ? "bg-success/10 text-success" : "bg-accent-orange/10 text-warn"}`}>
           {message.text}
         </p>
       )}

@@ -13,7 +13,7 @@ export default async function NotFound() {
       <p className="mt-4 text-ink-soft">{t.NotFound.text}</p>
       <Link
         href={localePath(locale)}
-        className="mt-8 inline-flex min-h-11 items-center rounded-md bg-primary px-6 font-semibold text-white hover:bg-primary-dark"
+        className="mt-8 inline-flex min-h-11 items-center rounded-md bg-navy px-6 font-semibold text-white hover:bg-primary-dark"
       >
         {t.NotFound.home}
       </Link>

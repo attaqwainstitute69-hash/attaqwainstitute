@@ -2,6 +2,7 @@
 
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { PaymentMethod } from "@/lib/api-types";
+import { PaymentIcon } from "./payment-icons";
 
 export type PaymentValues = { paymentMethod: PaymentMethod; senderNumber: string; trxId: string };
 
@@ -42,6 +43,7 @@ export function PaymentFields({ values, onChange, errors, t, idPrefix }: Props) 
                 checked={values.paymentMethod === m}
                 onChange={() => set({ paymentMethod: m })}
               />
+              <PaymentIcon method={m} className="size-5" />
               {t[m]}
             </label>
           ))}
@@ -66,7 +68,7 @@ export function PaymentFields({ values, onChange, errors, t, idPrefix }: Props) 
           className="mt-1 min-h-11 w-full rounded-md border border-neutral-sky px-3 font-mono aria-invalid:border-accent-orange"
         />
         {errors.senderNumber && (
-          <p id={`${idPrefix}-sender-error`} className="mt-1 text-sm text-[#9a4d00]">
+          <p id={`${idPrefix}-sender-error`} className="mt-1 text-sm text-warn">
             {errors.senderNumber}
           </p>
         )}
@@ -89,7 +91,7 @@ export function PaymentFields({ values, onChange, errors, t, idPrefix }: Props) 
           aria-describedby={`${idPrefix}-trx-hint`}
           className="mt-1 min-h-11 w-full rounded-md border border-neutral-sky px-3 font-mono uppercase aria-invalid:border-accent-orange"
         />
-        <p id={`${idPrefix}-trx-hint`} className={`mt-1 text-sm ${errors.trxId ? "text-[#9a4d00]" : "text-ink-soft"}`}>
+        <p id={`${idPrefix}-trx-hint`} className={`mt-1 text-sm ${errors.trxId ? "text-warn" : "text-ink-soft"}`}>
           {errors.trxId ?? t.trxIdHint}
         </p>
       </div>

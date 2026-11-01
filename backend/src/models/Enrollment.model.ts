@@ -19,7 +19,8 @@ export interface IEnrollment {
 
 const enrollmentSchema = new Schema<IEnrollment>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    // Queries by userId use the { userId, batchId } index below.
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     batchId: { type: Schema.Types.ObjectId, ref: "Batch", required: true, index: true },
     paymentMethod: { type: String, enum: ["bkash", "nagad", "bank"], required: true },
     senderNumber: {
@@ -54,5 +55,8 @@ enrollmentSchema.index(
   { trxId: 1 },
   { unique: true, partialFilterExpression: { status: { $in: ["pending", "approved"] } } },
 );
+
+// Duplicate-enrollment check for the same user + batch (database-schema.md §4).
+enrollmentSchema.index({ userId: 1, batchId: 1 });
 
 export const Enrollment = model<IEnrollment>("Enrollment", enrollmentSchema);

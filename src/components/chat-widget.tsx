@@ -74,7 +74,7 @@ export function ChatWidget({ locale, t }: Props) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label={open ? t.close : t.open}
-        className="fixed right-4 bottom-20 z-50 inline-flex size-14 items-center justify-center rounded-full bg-primary text-accent-gold-light shadow-lg hover:bg-primary-light md:bottom-4"
+        className="fixed right-4 bottom-20 z-50 inline-flex size-14 items-center justify-center rounded-full bg-navy text-accent-gold-light shadow-lg hover:bg-navy-light md:bottom-4"
       >
         <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           {open ? (
@@ -90,7 +90,7 @@ export function ChatWidget({ locale, t }: Props) {
           aria-label={t.title}
           className="fixed right-4 bottom-36 left-4 z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-neutral-sky bg-neutral-light shadow-2xl sm:left-auto sm:w-96 md:bottom-20"
         >
-          <header className="bg-primary px-4 py-3 text-white">
+          <header className="bg-navy px-4 py-3 text-white">
             <p className="font-semibold">{t.title}</p>
             <p className="text-xs text-white/70">{t.subtitle}</p>
           </header>
@@ -102,17 +102,17 @@ export function ChatWidget({ locale, t }: Props) {
                 key={i}
                 className={
                   m.role === "user"
-                    ? "ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-accent-gold px-3 py-2 whitespace-pre-wrap text-primary-dark"
-                    : "w-fit max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 whitespace-pre-wrap text-primary-dark shadow-sm"
+                    ? "ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-accent-gold px-3 py-2 whitespace-pre-wrap text-ink"
+                    : "w-fit max-w-[85%] rounded-2xl rounded-bl-sm bg-surface px-3 py-2 whitespace-pre-wrap text-ink shadow-sm"
                 }
               >
                 {m.role === "assistant" ? <Linkified text={m.content} locale={locale} /> : m.content}
               </p>
             ))}
-            {loading && <p className="w-fit rounded-2xl bg-white px-3 py-2 text-primary/60 shadow-sm">{t.typing}</p>}
+            {loading && <p className="w-fit rounded-2xl bg-surface px-3 py-2 text-primary/60 shadow-sm">{t.typing}</p>}
           </div>
 
-          <form onSubmit={send} className="flex gap-2 border-t border-neutral-sky bg-white p-3">
+          <form onSubmit={send} className="flex gap-2 border-t border-neutral-sky bg-surface p-3">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -129,7 +129,7 @@ export function ChatWidget({ locale, t }: Props) {
               {t.send}
             </button>
           </form>
-          <p className="bg-white px-3 pb-2 text-[11px] text-primary/60">{t.disclaimer}</p>
+          <p className="bg-surface px-3 pb-2 text-[11px] text-primary/60">{t.disclaimer}</p>
         </section>
       )}
     </>

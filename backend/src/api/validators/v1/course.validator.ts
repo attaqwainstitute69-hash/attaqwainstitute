@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { COURSE_FORMATS, COURSE_PILLARS, COURSE_STATUSES, MEDIA_KINDS } from "../../../models/Course.model";
+import {
+  COURSE_FORMATS,
+  COURSE_PILLARS,
+  COURSE_STATUSES,
+  MEDIA_KINDS,
+  SYLLABUS_LIMITS,
+  syllabusByteSize,
+} from "../../../models/Course.model";
 import { paginationSchema, sortSchema } from "./common.validator";
 
 // GET /courses (api-spec §5.1)
@@ -18,9 +25,18 @@ export const slugParamsSchema = z.object({
 
 const syllabusModuleSchema = z.object({
   moduleNo: z.number().int().min(1),
-  titleBn: z.string().trim().min(1),
-  topics: z.array(z.string().trim().min(1)).default([]),
+  titleBn: z.string().trim().min(1).max(SYLLABUS_LIMITS.textLength),
+  topics: z
+    .array(z.string().trim().min(1).max(SYLLABUS_LIMITS.textLength))
+    .max(SYLLABUS_LIMITS.topicsPerModule)
+    .default([]),
 });
+
+// Embedded syllabus stays bounded (database-schema.md §3).
+const syllabusSchema = z
+  .array(syllabusModuleSchema)
+  .max(SYLLABUS_LIMITS.modules)
+  .refine((v) => syllabusByteSize(v) <= SYLLABUS_LIMITS.maxBytes, "Syllabus must stay under 50KB");
 
 const mediaItemSchema = z.object({
   kind: z.enum(MEDIA_KINDS),
@@ -39,7 +55,7 @@ export const createCourseBodySchema = z.object({
   status: z.enum(COURSE_STATUSES).optional(),
   descriptionBn: z.string().trim().min(1),
   descriptionEn: z.string().trim().min(1).optional(),
-  syllabus: z.array(syllabusModuleSchema).optional(),
+  syllabus: syllabusSchema.optional(),
   trainerName: z.string().trim().min(1).optional(),
   trainerBio: z.string().trim().min(1).optional(),
   trainerPhoto: z.url().optional(),

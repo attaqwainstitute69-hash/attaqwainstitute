@@ -31,6 +31,10 @@ services:
         generateValue: true
       - key: OTP_SECRET
         generateValue: true
+      # Not generateValue: this key must be backed up outside Render, because losing it makes the
+      # encrypted counselling records unreadable. Enter it once in the dashboard.
+      - key: DATA_ENCRYPTION_KEY
+        sync: false
       - key: MONGODB_URI
         sync: false
       - key: RESEND_API_KEY

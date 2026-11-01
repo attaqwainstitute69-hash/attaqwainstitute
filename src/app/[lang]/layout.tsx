@@ -7,6 +7,8 @@ import { WhatsAppButton } from "@/components/whatsapp-button";
 import { ChatWidget } from "@/components/chat-widget";
 import { HeaderAuth, HeaderAuthLink } from "@/components/header-auth";
 import { SiteFooter } from "@/components/site-footer";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { ThemeScript, ThemeToggle } from "@/components/theme";
 import { Suspense } from "react";
 import "../globals.css";
 
@@ -40,11 +42,24 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
   const t = await getDictionary();
 
   return (
-    <html lang={locale} className={`${notoBengali.variable} ${inter.variable} h-full antialiased`}>
+    // data-theme is set by ThemeScript before React hydrates, hence suppressHydrationWarning.
+    // data-scroll-behavior lets Next skip smooth scrolling on route changes (Next 16).
+    <html
+      lang={locale}
+      data-theme="light"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+      className={`${notoBengali.variable} ${inter.variable} h-full antialiased`}
+    >
+      <head>
+        <ThemeScript />
+      </head>
       <body className="flex min-h-full flex-col">
+        <ScrollReveal />
         <SiteHeader
           locale={locale}
           t={t.Nav}
+          theme={<ThemeToggle label={t.Nav.darkMode} className="text-white/80 hover:bg-white/10 hover:text-white" />}
           auth={
             <Suspense fallback={<HeaderAuthLink locale={locale} t={t.Nav} />}>
               <HeaderAuth locale={locale} t={t.Nav} />

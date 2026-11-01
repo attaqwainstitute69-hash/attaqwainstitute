@@ -10,7 +10,9 @@
     "start": "node --env-file-if-exists=.env dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "admin:promote": "tsx --env-file=.env src/scripts/promote-admin.ts",
-    "seed:test": "tsx --env-file=.env src/scripts/seed-test-courses.ts"
+    "seed:test": "tsx --env-file=.env src/scripts/seed-test-courses.ts",
+    "db:indexes": "tsx --env-file=.env src/scripts/sync-indexes.ts",
+    "counselling:encrypt": "tsx --env-file=.env src/scripts/encrypt-counselling.ts"
   },
   "engines": {
     "node": ">=22.9"

@@ -30,9 +30,9 @@ export function DeleteCourse({ courseId }: { courseId: string }) {
 
   return (
     <section className="rounded-xl border border-accent-orange/40 bg-surface p-5">
-      <h2 className="font-bold text-[#9a4d00]">কোর্স মুছে ফেলা</h2>
+      <h2 className="font-bold text-warn">কোর্স মুছে ফেলা</h2>
       <p className="mt-1 text-sm text-ink-soft">কোর্স ও তার সব ব্যাচ স্থায়ীভাবে মুছে যাবে। কোনো আবেদন থাকলে মোছা যাবে না।</p>
-      {error && <p className="mt-3 rounded-md bg-accent-orange/10 p-3 text-sm text-[#9a4d00]">{error}</p>}
+      {error && <p className="mt-3 rounded-md bg-accent-orange/10 p-3 text-sm text-warn">{error}</p>}
       <div className="mt-3 flex gap-2">
         {confirming ? (
           <>
@@ -52,7 +52,7 @@ export function DeleteCourse({ courseId }: { courseId: string }) {
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            className="min-h-11 rounded-md border border-accent-orange px-4 font-semibold text-[#9a4d00] hover:bg-accent-orange/10"
+            className="min-h-11 rounded-md border border-accent-orange px-4 font-semibold text-warn hover:bg-accent-orange/10"
           >
             কোর্স মুছুন
           </button>

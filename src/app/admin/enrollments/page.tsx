@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/admin";
 import { formatDateTime, formatNumber, formatPrice } from "@/lib/format";
 import { NoAccess } from "@/components/admin/no-access";
 import { EnrollmentActions } from "@/components/admin/enrollment-actions";
+import { PaymentIcon } from "@/components/payment-icons";
 
 export const metadata: Metadata = { title: "এনরোলমেন্ট যাচাই" };
 
@@ -44,8 +45,8 @@ const methodLabel: Record<AdminEnrollment["paymentMethod"], string> = { bkash: "
 const statusLabel: Record<EnrollmentStatus, string> = { pending: "যাচাই বাকি", approved: "অনুমোদিত", rejected: "বাতিল" };
 const statusStyle: Record<EnrollmentStatus, string> = {
   pending: "bg-neutral-sky/40 text-primary",
-  approved: "bg-[#1f7a4a]/10 text-[#1f7a4a]",
-  rejected: "bg-accent-orange/15 text-[#9a4d00]",
+  approved: "bg-success/10 text-success",
+  rejected: "bg-accent-orange/15 text-warn",
 };
 
 type Search = Record<string, string | string[] | undefined>;
@@ -88,7 +89,7 @@ async function Queue({ searchParams }: { searchParams: Promise<Search> }) {
               key={s.value}
               href={href({ status: s.value, page: undefined })}
               aria-current={status === s.value ? "true" : undefined}
-              className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-primary aria-[current=true]:text-white"
+              className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-navy aria-[current=true]:text-white"
             >
               {s.label}
             </Link>
@@ -118,7 +119,7 @@ async function Queue({ searchParams }: { searchParams: Promise<Search> }) {
             aria-label="TrxID, মোবাইল নম্বর বা টোকেন দিয়ে খুঁজুন"
             className="min-h-11 w-56 rounded-md border border-neutral-sky bg-surface px-3"
           />
-          <button type="submit" className="min-h-11 rounded-md bg-primary px-4 font-semibold text-white hover:bg-primary-light">
+          <button type="submit" className="min-h-11 rounded-md bg-navy px-4 font-semibold text-white hover:bg-navy-light">
             খুঁজুন
           </button>
         </form>
@@ -189,7 +190,7 @@ function EnrollmentRow({ enrollment: e }: { enrollment: AdminEnrollment }) {
             ব্যাচ {formatNumber(e.batch.batchNo, "bn")} · ফি {formatPrice(e.course.price, "bn")}
           </p>
           {/* Seats are taken at approval, so several pending payments can compete for the last seat (backend.md §4.2). */}
-          <p className={`mt-1 ${remaining === 0 ? "font-semibold text-[#9a4d00]" : "text-ink-soft"}`}>
+          <p className={`mt-1 ${remaining === 0 ? "font-semibold text-warn" : "text-ink-soft"}`}>
             আসন: {formatNumber(e.batch.enrolledCount, "bn")}/{formatNumber(e.batch.seatCapacity, "bn")}
             {remaining === 0 ? " — পূর্ণ" : ` (${formatNumber(remaining, "bn")}টি বাকি)`}
           </p>
@@ -197,7 +198,10 @@ function EnrollmentRow({ enrollment: e }: { enrollment: AdminEnrollment }) {
 
         <div className="text-sm">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-primary">{methodLabel[e.paymentMethod]}</span>
+            <span className="flex items-center gap-2 font-semibold text-primary">
+              <PaymentIcon method={e.paymentMethod} className="size-5" />
+              {methodLabel[e.paymentMethod]}
+            </span>
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusStyle[e.status]}`}>{statusLabel[e.status]}</span>
           </div>
           <p className="mt-1">
@@ -211,7 +215,7 @@ function EnrollmentRow({ enrollment: e }: { enrollment: AdminEnrollment }) {
       </div>
 
       {e.status === "rejected" && e.rejectionReason && (
-        <p className="mt-3 rounded-md bg-accent-orange/10 p-3 text-sm text-[#9a4d00]">বাতিলের কারণ: {e.rejectionReason}</p>
+        <p className="mt-3 rounded-md bg-accent-orange/10 p-3 text-sm text-warn">বাতিলের কারণ: {e.rejectionReason}</p>
       )}
 
       {e.status === "pending" && <EnrollmentActions enrollmentId={e._id} seatsFull={remaining === 0} />}
