@@ -9,7 +9,10 @@ import { whatsappLink } from "@/lib/site";
 // The browser sends plain-text history; tool calls happen here, on the server, and never reach the client.
 
 const MODEL = process.env.CHAT_MODEL ?? "claude-sonnet-5-5";
-const MAX_TOOL_ROUNDS = 6;
+// Each round is one paid model call, so a single visitor message costs at most MAX_TOOL_ROUNDS + 1 calls.
+const MAX_TOOL_ROUNDS = 4;
+// Chat replies are a few short paragraphs. A low ceiling caps the worst-case bill per call.
+const MAX_OUTPUT_TOKENS = 2048;
 
 // Created on first use, so a missing ANTHROPIC_API_KEY fails the request instead of the module load.
 let client: Anthropic | undefined;
@@ -28,8 +31,9 @@ const WINDOW_MS = 10 * 60 * 1000;
 const LIMIT = 20;
 const hits = new Map<string, { count: number; resetAt: number }>();
 
-// Every message costs model tokens, so there is also a site-wide hourly ceiling: an attacker with many
-// IPs can at worst use up this budget, not run up an unbounded bill. Override with CHAT_HOURLY_LIMIT.
+// Every message costs model tokens, so there is also a site-wide hourly ceiling. Override with CHAT_HOURLY_LIMIT.
+// It is in memory, so on Vercel each server instance has its own count and it resets on a cold start: it is
+// a soft limit only. The hard cap is the monthly spend limit set in the Anthropic Console (DEPLOY.md).
 const GLOBAL_LIMIT = Number(process.env.CHAT_HOURLY_LIMIT) || 600;
 const globalWindow = { count: 0, resetAt: 0 };
 
@@ -82,7 +86,7 @@ export async function POST(request: Request) {
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
       const response = await getClient().beta.messages.create({
         model: MODEL,
-        max_tokens: 16000,
+        max_tokens: MAX_OUTPUT_TOKENS,
         betas: ["server-side-fallback-2026-07-01"],
         fallbacks: "default",
         output_config: { effort: "low" },

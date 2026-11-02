@@ -26,6 +26,8 @@ async function apiGet<T>(path: string, accessToken?: string): Promise<{ data: T;
       headers: {
         Accept: "application/json",
         ...(accessToken && { Cookie: `accessToken=${accessToken}` }),
+        // Every server-side call leaves from Vercel's few IPs; this keeps them out of the API's per-IP limit.
+        ...(process.env.INTERNAL_API_KEY && { "X-Internal-Key": process.env.INTERNAL_API_KEY }),
       },
       signal: AbortSignal.timeout(10_000),
     });

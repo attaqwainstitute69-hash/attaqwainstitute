@@ -36,6 +36,8 @@ async function callApi(path: string, init: RequestInit & { accessToken?: string 
       "Accept-Language": "bn",
       ...(rest.body && { "Content-Type": "application/json" }),
       ...(accessToken && { Cookie: `accessToken=${accessToken}` }),
+      // Same as src/lib/api.ts: server-side calls skip the API's per-IP limit (the chat has its own).
+      ...(process.env.INTERNAL_API_KEY && { "X-Internal-Key": process.env.INTERNAL_API_KEY }),
       ...headers,
     },
     cache: "no-store",

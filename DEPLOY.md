@@ -31,11 +31,21 @@ Login cookie (`accessToken`) frontend ar API — duitate porte hobe, tai **duita
 ## 3. Backend → Render
 
 1. render.com → GitHub diye login → **New → Blueprint** → `attaqwainstitute` repo select.
-2. `render.yaml` theke `attaqwa-api` service banabe. `sync: false` gula chaibe: `MONGODB_URI`, `RESEND_API_KEY`, bKash/Nagad number, R2 er 5 ta (R2 pore dile upload 503 dibe, baki shob cholbe).
+2. `render.yaml` theke `attaqwa-api` service banabe. `sync: false` gula chaibe: `INTERNAL_API_KEY` (niche dekhun), `MONGODB_URI`, `RESEND_API_KEY`, bKash/Nagad number, R2 er 5 ta (R2 pore dile upload 503 dibe, baki shob cholbe).
 3. Deploy shesh hole: `https://attaqwa-api.onrender.com/api/v1/health` → `ok` ashle thik.
 4. **Settings → Custom Domain** → `api.attaqwainstitute.com` add → je CNAME dey seta DNS e bosan.
 
 `JWT_SECRET` ar `OTP_SECRET` Render nije random baniye dey — kokhono bodlaben na (bodlale shobai logout).
+
+### `INTERNAL_API_KEY` banano
+
+Ekta lomba random string, Render ar Vercel **duitatei ekoi value**:
+
+```
+openssl rand -hex 32
+```
+
+`JWT_SECRET` / `OTP_SECRET` theke alada hote hobe. Kauke dekhaben na, GitHub e push korben na.
 
 ## 4. Frontend → Vercel
 
@@ -47,11 +57,16 @@ Login cookie (`accessToken`) frontend ar API — duitate porte hobe, tai **duita
    | `NEXT_PUBLIC_SITE_URL` | `https://attaqwainstitute.com` |
    | `API_URL` | `https://api.attaqwainstitute.com/api/v1` |
    | `NEXT_PUBLIC_API_URL` | `https://api.attaqwainstitute.com/api/v1` |
+   | `INTERNAL_API_KEY` | Render e je value diyechen **hubohu sheta** (na dile `/admin` ar `/my-account` rate limit e bondho hoye jabe) |
    | `ANTHROPIC_API_KEY` | AI chat er jonno (na dile chat bondho thakbe) |
    | `CHAT_MODEL` | `claude-sonnet-5-5` |
    | `NEXT_PUBLIC_MADRASATUT_TAQWA_URL` | Madrasatut Taqwa er site (optional) |
 
 3. Deploy → **Settings → Domains** → `attaqwainstitute.com` ar `www.attaqwainstitute.com` add → DNS record bosan.
+
+### AI chat er khoroch er limit (obosshoi)
+
+console.anthropic.com → **Settings → Limits** → mashik spend limit set korun (jemon $20). Code e o limit ache, kintu sheta server er memory te thake ar Vercel e reset hoy — asol shima eta.
 
 ## 5. Prothom admin
 

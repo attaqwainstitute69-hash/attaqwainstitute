@@ -31,6 +31,9 @@ services:
         generateValue: true
       - key: OTP_SECRET
         generateValue: true
+      # Same value goes into Vercel's INTERNAL_API_KEY, so it is entered by hand, not generated.
+      - key: INTERNAL_API_KEY
+        sync: false
       - key: MONGODB_URI
         sync: false
       - key: RESEND_API_KEY

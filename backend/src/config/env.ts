@@ -17,6 +17,10 @@ const envSchema = z
     // Set to ".attaqwainstitute.com" in production so the Next.js server can read the cookie too.
     COOKIE_DOMAIN: z.string().optional(),
     OTP_SECRET: z.string().min(32),
+    // Shared with the Next.js server (same value in Vercel). Server-side calls send it in X-Internal-Key so
+    // they skip the per-IP general limit: they all leave from Vercel's few IPs, so counting them per IP
+    // would lock every visitor out of /admin and /my-account after ~100 requests.
+    INTERNAL_API_KEY: z.string().min(32).optional(),
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().default("At-Taqwa Institute <no-reply@attaqwainstitute.com>"),
     BKASH_MERCHANT_NUMBER: z.string().default(""),
@@ -37,10 +41,18 @@ const envSchema = z
     path: ["FRONTEND_URL"],
     message: "Must be https:// in production",
   })
+  .refine((e) => e.NODE_ENV !== "production" || Boolean(e.INTERNAL_API_KEY), {
+    path: ["INTERNAL_API_KEY"],
+    message: "Required in production (set the same value on Vercel)",
+  })
   // One leaked secret must not unlock the other (forged sessions vs. offline OTP guessing).
   .refine((e) => e.JWT_SECRET !== e.OTP_SECRET, {
     path: ["OTP_SECRET"],
     message: "Must differ from JWT_SECRET",
+  })
+  .refine((e) => !e.INTERNAL_API_KEY || (e.INTERNAL_API_KEY !== e.JWT_SECRET && e.INTERNAL_API_KEY !== e.OTP_SECRET), {
+    path: ["INTERNAL_API_KEY"],
+    message: "Must differ from JWT_SECRET and OTP_SECRET",
   });
 
 const parsed = envSchema.safeParse(process.env);

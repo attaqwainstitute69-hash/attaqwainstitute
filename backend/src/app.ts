@@ -25,10 +25,11 @@ app.use("/api", (_req, res, next) => {
 });
 app.use(helmet());
 app.use(cors({ origin: new URL(env.FRONTEND_URL).origin, credentials: true }));
+// Before the limiter: generalLimiter counts logged-in users by the session cookie.
+app.use(cookieParser());
 app.use("/api", generalLimiter);
 app.use("/api", originGuard);
 app.use(express.json({ limit: "100kb" }));
-app.use(cookieParser());
 
 app.use("/api/v1", v1Router);
 app.use("/api", unsupportedVersionHandler);
