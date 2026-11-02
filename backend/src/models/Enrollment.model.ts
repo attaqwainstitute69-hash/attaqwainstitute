@@ -55,4 +55,9 @@ enrollmentSchema.index(
   { unique: true, partialFilterExpression: { status: { $in: ["pending", "approved"] } } },
 );
 
+// One enrollment per user per batch. A rejected one is fixed with "resubmit" (same document), never a new one.
+// enrollment.service checks this first; the index closes the race of two submits at once (e.g. a double
+// click with different TrxIDs). The duplicate maps to 409 ALREADY_ENROLLED in errorHandler.
+enrollmentSchema.index({ userId: 1, batchId: 1 }, { unique: true });
+
 export const Enrollment = model<IEnrollment>("Enrollment", enrollmentSchema);
