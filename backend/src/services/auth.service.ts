@@ -1,8 +1,11 @@
+import { createHash, randomBytes } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { AppError } from "../utils/AppError";
 import { generateOtp, hashOtp, verifyOtpHash } from "../utils/otp";
+import { logger } from "../utils/logger";
 import { maskEmail } from "../utils/mask";
+import { dummyPasswordHash, hashPassword, verifyPassword } from "../utils/password";
 import { generateStudentToken } from "../utils/tokenGenerator";
 import { windowCounter } from "../utils/windowCounter";
 import { userRepository } from "../repositories/user.repository";
@@ -23,6 +26,19 @@ const STAFF_ROLES: Role[] = ["counsellor", "content_editor", "super_admin"];
 const OTP_SENDS_PER_DAY = 10;
 const otpSendsPerEmail = windowCounter(24 * 60 * 60 * 1000, OTP_SENDS_PER_DAY);
 
+// Wrong passwords per account, whatever IP they come from: 10 per 15 min, then the account waits.
+const loginFailuresPerAccount = windowCounter(15 * 60 * 1000, 10);
+
+// Forgot password: the emailed link is valid for 30 minutes; at most 5 links per account per day.
+const RESET_TTL_MINUTES = 30;
+const resetEmailsPerAccount = windowCounter(24 * 60 * 60 * 1000, 5);
+
+const hashResetToken = (token: string) => createHash("sha256").update(token).digest("hex");
+
+export type RegisterInput = RegisterProfile & { email: string; password: string };
+export type LoginInput = { identifier: string; password: string };
+export type ChangePasswordInput = { currentPassword?: string; newPassword: string };
+
 export type RequestOtpInput =
   | { purpose: "register"; email: string }
   | { purpose: "login"; identifier: string };
@@ -39,7 +55,7 @@ export type VerifyOtpInput =
   | { purpose: "login"; identifier: string; otp: string };
 
 // Response shape of /auth/me and verify-otp (api-spec §3.2, §3.4).
-function toUserDto(user: IUser) {
+export function toUserDto(user: IUser) {
   return {
     _id: user._id,
     token: user.token,
@@ -77,12 +93,13 @@ async function consumeOtp(email: string, otp: string): Promise<void> {
   }
 }
 
-async function createUserWithUniqueToken(email: string, profile: RegisterProfile) {
+async function createUserWithUniqueToken(email: string, profile: RegisterProfile, passwordHash?: string) {
   for (let attempt = 1; ; attempt++) {
     try {
       return await userRepository.create({
         ...profile,
         email,
+        ...(passwordHash && { passwordHash }),
         token: generateStudentToken(),
         isVerified: true,
         privacyConsent: true,
@@ -155,11 +172,99 @@ export const authService = {
     };
   },
 
+  // Password registration: no email OTP, the account is usable right away.
+  async register(input: RegisterInput) {
+    const { email, password, fullName, phone, role, institution } = input;
+    if (await userRepository.existsByEmail(email)) throw new AppError("EMAIL_EXISTS", 409);
+
+    try {
+      const user = await createUserWithUniqueToken(email, { fullName, phone, role, institution }, await hashPassword(password));
+      return { user: toUserDto(user), isNewUser: true, redirectTo: "/my-account", sessionVersion: user.sessionVersion ?? 0 };
+    } catch (err) {
+      // Lost a race with a concurrent register of the same email.
+      if (isDuplicateKeyError(err, "email")) throw new AppError("EMAIL_EXISTS", 409);
+      throw err;
+    }
+  },
+
+  // One error for unknown account, wrong password and an old OTP-only account without a password.
+  // A shared mobile number logs in the one account whose password matches.
+  async login(input: LoginInput) {
+    const key = input.identifier.toLowerCase();
+    if (!loginFailuresPerAccount.check(key)) throw new AppError("RATE_LIMITED", 429, { reason: "LOGIN_LOCKED" });
+
+    const candidates = await userRepository.findForLogin(input.identifier);
+    const matches = [];
+    for (const c of candidates) {
+      if (c.passwordHash && (await verifyPassword(input.password, c.passwordHash))) matches.push(c);
+    }
+    // Same work for an unknown identifier as for a wrong password.
+    if (candidates.length === 0) await verifyPassword(input.password, await dummyPasswordHash());
+
+    if (matches.length === 0) {
+      loginFailuresPerAccount.hit(key);
+      throw new AppError("INVALID_CREDENTIALS", 401);
+    }
+    // Two accounts on one number with the same password: the number cannot pick one.
+    if (matches.length > 1) throw new AppError("PHONE_NOT_UNIQUE", 409);
+    const user = matches[0];
+
+    return {
+      user: toUserDto(user),
+      isNewUser: false,
+      redirectTo: STAFF_ROLES.includes(user.role) ? "/admin" : "/my-account",
+      sessionVersion: user.sessionVersion ?? 0,
+    };
+  },
+
+  // Always answers the same way, so the form does not reveal which emails / numbers are registered.
+  // Each matching account (a mobile number may have several) gets its own link at its own email.
+  async forgotPassword(identifier: string, lang: "bn" | "en") {
+    const users = await userRepository.findForLogin(identifier);
+    for (const user of users) {
+      if (!resetEmailsPerAccount.hit(user._id.toString())) continue;
+
+      const token = randomBytes(32).toString("hex");
+      await userRepository.setResetToken(user._id.toString(), hashResetToken(token), new Date(Date.now() + RESET_TTL_MINUTES * 60_000));
+      try {
+        await notificationService.sendPasswordResetEmail(user.email, {
+          fullName: user.fullName,
+          url: `${env.FRONTEND_URL}/${lang}/reset-password?token=${token}`,
+          expiresInMinutes: RESET_TTL_MINUTES,
+        });
+      } catch (err) {
+        // Not surfaced: an error here would tell the caller that this account exists.
+        logger.error({ err, to: maskEmail(user.email) }, "Password reset email failed");
+      }
+    }
+  },
+
+  // Sets the new password and signs out every device; the user then logs in with it.
+  async resetPassword(token: string, password: string) {
+    const user = await userRepository.claimResetToken(hashResetToken(token));
+    if (!user) throw new AppError("RESET_TOKEN_INVALID", 400);
+    await userRepository.setPassword(user._id.toString(), await hashPassword(password));
+  },
+
+  // Signs out other devices (sessionVersion bump); the controller re-issues this device's cookie.
+  async changePassword(userId: string, input: ChangePasswordInput) {
+    const user = await userRepository.findWithPasswordById(userId);
+    if (!user) throw new AppError("UNAUTHENTICATED", 401);
+    if (user.passwordHash && !(input.currentPassword && (await verifyPassword(input.currentPassword, user.passwordHash)))) {
+      throw new AppError("WRONG_PASSWORD", 400);
+    }
+
+    const updated = await userRepository.setPassword(userId, await hashPassword(input.newPassword));
+    if (!updated) throw new AppError("UNAUTHENTICATED", 401);
+    return { user: toUserDto(updated), isNewUser: false, redirectTo: "/my-account", sessionVersion: updated.sessionVersion ?? 0 };
+  },
+
   async getMe(userId: string) {
-    const user = await userRepository.findById(userId);
+    const user = await userRepository.findWithPasswordById(userId);
     // Account deleted after the JWT was issued.
     if (!user) throw new AppError("UNAUTHENTICATED", 401);
-    return toUserDto(user);
+    // hasPassword: accounts from the old OTP flow can set one without a current password.
+    return { ...toUserDto(user), hasPassword: Boolean(user.passwordHash) };
   },
 
   signAccessToken(user: { _id: { toString(): string }; token: string; role: Role; sessionVersion?: number }): string {

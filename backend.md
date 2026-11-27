@@ -3,7 +3,7 @@
 
 **Backend:** Express 5, TypeScript, Node.js ≥ 20.6 (Layered Service-Repository Pattern)  
 **Database:** MongoDB Atlas (Mongoose ODM, Replica Set with ACID Transactions)  
-**External Services:** Resend (Email OTP & transactional alerts), Cloudflare R2 / Cloudinary (PDFs, logos, banners)  
+**External Services:** Resend (password reset links, Email OTP & transactional alerts), Cloudflare R2 / Cloudinary (PDFs, logos, banners)  
 **Base URL:** `https://api.attaqwainstitute.com/api/v1` (local: `http://localhost:5000/api/v1`)
 
 **Related documents:**
@@ -58,7 +58,7 @@ backend/
     │                               # notFoundHandler, errorHandler
     │
     ├── services/                   # ── 2. BUSINESS LOGIC LAYER (not versioned) ──
-    │   ├── auth.service.ts             # OTP generation/verification, cooldown, JWT signing
+    │   ├── auth.service.ts             # password register/login/reset/change, OTP, JWT signing
     │   ├── user.service.ts             # Profile update, admin user list, role change
     │   ├── course.service.ts           # Catalog filtering, course CRUD, delete guard
     │   ├── batch.service.ts            # Batch CRUD, seat summary (remainingSeats, isHouseful)
@@ -263,10 +263,10 @@ Express 5 forwards rejected promises from async handlers to `errorHandler` nativ
 | Rule | Detail |
 |---|---|
 | Log level | `4xx` → `warn`, `5xx` → `error` (with stack). |
-| Never logged | OTP codes, OTP hashes, JWTs, cookies, `confidentialNotes`, counselling `message`. Enforced by pino `redact` in `utils/logger.ts` (cookie / authorization headers, `*.otp`, `*.otpHash`, `*.accessToken`, `*.confidentialNotes`). A counselling `message` must never be passed to the logger, because a `*.message` redact path would also hide every error message. In development without `RESEND_API_KEY`, OTP emails are printed with `console.info`, never through the logger. |
+| Never logged | Passwords, password hashes, reset tokens, OTP codes, OTP hashes, JWTs, cookies, `confidentialNotes`, counselling `message`. Enforced by pino `redact` in `utils/logger.ts` (cookie / authorization headers, `*.otp`, `*.otpHash`, `*.password`, `*.currentPassword`, `*.newPassword`, `*.passwordHash`, `*.resetTokenHash`, `*.accessToken`, `*.confidentialNotes`). A counselling `message` must never be passed to the logger, because a `*.message` redact path would also hide every error message. In development without `RESEND_API_KEY`, OTP and password-reset emails are printed with `console.info`, never through the logger. |
 | Masked in logs | `email` (`ah*****@example.com`), `phone` / `senderNumber` (`017*****678`), `trxId` (`BL9A****10`). Helpers live in `utils/mask.ts`. `maskEmail` exists now; add `maskPhone` / `maskTrxId` there with the enrollment module, the first place they are logged. |
 | Error messages | Never reveal whether data exists for another user (e.g. accessing someone else's enrollment returns `404`, not `403`, when the ID is not owned). |
-| Auth messages | **Open decision.** api-spec §3.1 returns `404 NOT_FOUND` for a login with an unknown email/token, which tells the caller whether an account exists. The current implementation follows the spec. Account enumeration is limited only by the OTP rate limit (3 / email + IP / 15 min). To close it, return the same `200` with a masked placeholder for unknown identifiers and send no email; that is a breaking change to api-spec §3.1. |
+| Auth messages | **Password flow (used by the website):** login answers `401 INVALID_CREDENTIALS` for an unknown account, a wrong password and an account without a password alike, and runs a scrypt check against a dummy hash when nothing matches, so timing does not tell them apart either. `forgot-password` always answers the same `200`, and a failed reset email is only logged. Registration still answers `409 EMAIL_EXISTS`, which is needed to tell the user to log in instead. **OTP flow, open decision:** api-spec §3.1 returns `404 NOT_FOUND` for a login with an unknown email/token, which tells the caller whether an account exists. The current implementation follows the spec. Account enumeration is limited only by the OTP rate limit (3 / email + IP / 15 min). To close it, return the same `200` with a masked placeholder for unknown identifiers and send no email; that is a breaking change to api-spec §3.1. |
 
 ---
 
@@ -376,7 +376,7 @@ Status column: ✅ implemented · ⏳ planned (module not built yet).
 
 1. **HTTP-only JWT cookie.** The access token lives in an `HttpOnly`, `SameSite=Lax` cookie (`Secure` when `NODE_ENV=production`), so page scripts cannot read it even if an XSS bug exists. All cookie options live in `config/cookie.ts` and are reused for set, logout and error-clear, so the browser always sees them as the same cookie.
 2. **JWT.** HS256, signed and verified with `algorithms: ["HS256"]` pinned. Valid for 7 days (`JWT_EXPIRES_IN_SECONDS`). `JWT_SECRET` and `OTP_SECRET` are separate keys, each at least 32 characters, checked at boot by `config/env.ts`.
-   - **Revocation.** Each user has a `sessionVersion`, copied into the JWT as `sv`. `authGuard` loads the user on every request and rejects the token if the user is gone or `sv` no longer matches (`401 UNAUTHENTICATED`, `reason: "revoked"`). Logout increments `sessionVersion`, so every token issued before it, on every device, stops working — including a copied cookie.
+   - **Revocation.** Each user has a `sessionVersion`, copied into the JWT as `sv`. `authGuard` loads the user on every request and rejects the token if the user is gone or `sv` no longer matches (`401 UNAUTHENTICATED`, `reason: "revoked"`). Logout increments `sessionVersion`, so every token issued before it, on every device, stops working — including a copied cookie. A password reset or change increments it too; after a change the current device gets a new cookie and stays logged in.
    - **Role from the DB.** `authGuard` takes `role` from the database, not from the token, so promoting or demoting a user takes effect on their next request.
    - Authenticated responses carry `Cache-Control: no-store`.
 3. **CSRF.** No CSRF token is used, for four reasons:
@@ -404,10 +404,16 @@ Status column: ✅ implemented · ⏳ planned (module not built yet).
    | `POST /auth/request-otp` | 3 / 15 min, plus 60 s cooldown per email (in `auth.service`) | IP + email/identifier |
    | `POST /auth/request-otp` | 10 codes / 24 h (in `auth.service`, `utils/windowCounter.ts`) | email, any IP |
    | `POST /auth/verify-otp` | 10 / 15 min (`otpVerifyLimiter`) | IP |
-   | Public forms (`/counselling-requests`, `/institutions/requests`) | 5 / hour | IP (`publicFormLimiter`, attached when those routes are built) |
+   | `POST /auth/register` | 10 / hour (`registerLimiter`) | IP |
+   | `POST /auth/login`, `/auth/reset-password`, `/auth/change-password` | 10 / 15 min each (`loginLimiter`) | IP |
+   | `POST /auth/login` | 10 wrong passwords / 15 min, then `429` `LOGIN_LOCKED` (in `auth.service`) | identifier, any IP |
+   | `POST /auth/forgot-password` | 3 / 15 min (`passwordResetLimiter`) | IP + identifier |
+   | `POST /auth/forgot-password` | 5 reset emails / 24 h (in `auth.service`) | account, any IP |
+   | Public forms (`/counselling-requests`, `/institutions/requests`) | 5 / hour | IP (`publicFormLimiter`) |
 
    - **Client IP depends on `TRUST_PROXY`.** Set it to the number of reverse proxies in front of the API: `0` if the API is reached directly, `1` behind a single load balancer or Nginx. If it is too high, clients can spoof `X-Forwarded-For` and bypass every limit. If it is too low, all users share the proxy's IP and the 100-request limit applies to everyone together.
    - **The store is in memory.** Counters reset on restart and are not shared between instances. Move to a shared store (Upstash Redis, already listed in the root `.env.example`) before running more than one instance.
+   - **Password guessing** is bounded by the per-identifier lockout (10 / 15 min from any IP), about 1,000 guesses per account per day, against passwords of at least 8 characters. The trade-off is the same as for OTP: someone who knows a user's email or number can keep that account locked. The lockout counts the identifier as typed, so an account can be tried 10 times each by email, token and mobile.
    - **OTP brute force** is bounded by 3 attempts per OTP and 10 codes per email per day, both holding across IPs: at most 30 guesses per account per day, about a 1-in-33,000 chance of guessing a 6-digit code. The trade-off is that someone who knows a user's email can use up that user's 10 daily codes and block their login for the rest of the day.
 
 ### 5.4 Input Validation & NoSQL Injection ✅
@@ -418,7 +424,11 @@ Status column: ✅ implemented · ⏳ planned (module not built yet).
    - `express-mongo-sanitize` is not used: it reassigns `req.query`, which is read-only in Express 5.
    - Mongoose `sanitizeFilter` is not used either: it also neutralises the repositories' own `$gt` / `$in` operators.
 
-### 5.5 OTP Storage ✅
+### 5.5 Password & OTP Storage ✅
+
+- **Passwords.** Hashed with Node's built-in `crypto.scrypt` (N=16384, r=8, p=1, 16-byte random salt) in `utils/password.ts`, stored as `scrypt$N$r$p$salt$hash` so the cost can be raised later. Compared with `timingSafeEqual`. `passwordHash` has `select: false` and is only loaded by the login and change-password queries.
+- **Reset tokens.** 32 random bytes, emailed as hex. Only the SHA-256 hash is stored (`resetTokenHash`, `select: false`, sparse index) with `resetTokenExpiresAt` 30 minutes ahead. A fast hash is enough here because the token is random, unlike a password. Using the link is one atomic `findOneAndUpdate` that matches only an unexpired hash and removes it, so a link cannot be used twice.
+- **Old OTP-only accounts** have no `passwordHash`. They cannot log in with a password until they use "forgot password", or set one in `/my-account` while still logged in.
 
 10. **Hashing.** OTPs are stored as `HMAC-SHA256(email:otp)` keyed with `OTP_SECRET` and compared with `timingSafeEqual`. A 6-digit code has only 10⁶ values, so a slow hash like bcrypt would not stop offline guessing after a DB leak; the server-side key does.
 11. **Single use.** Issuing a new OTP deletes older ones for that email. Attempt counting and consumption are single atomic updates, so concurrent verifies cannot reuse a code. A TTL index removes records after 10 minutes.

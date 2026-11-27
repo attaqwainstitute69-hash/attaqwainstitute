@@ -17,7 +17,8 @@ export interface IBatch {
 
 const batchSchema = new Schema<IBatch>(
   {
-    courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true, index: true },
+    // Queries by courseId use the { courseId, batchNo } index below.
+    courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     batchNo: { type: Number, required: true },
     startDate: { type: Date, required: true },
     scheduleDetails: { type: String, required: true },

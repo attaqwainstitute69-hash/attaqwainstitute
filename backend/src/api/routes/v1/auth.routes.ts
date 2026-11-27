@@ -1,12 +1,45 @@
 import { Router } from "express";
 import { authController } from "../../controllers/v1/auth.controller";
 import { authGuard } from "../../middlewares/authGuard";
-import { otpRequestLimiter, otpVerifyLimiter } from "../../middlewares/rateLimiter";
+import {
+  loginLimiter,
+  otpRequestLimiter,
+  otpVerifyLimiter,
+  passwordResetLimiter,
+  registerLimiter,
+} from "../../middlewares/rateLimiter";
 import { validate } from "../../middlewares/validate";
-import { requestOtpBodySchema, verifyOtpBodySchema } from "../../validators/v1/auth.validator";
+import {
+  changePasswordBodySchema,
+  forgotPasswordBodySchema,
+  loginBodySchema,
+  resetPasswordBodySchema,
+  registerBodySchema,
+  requestOtpBodySchema,
+  verifyOtpBodySchema,
+} from "../../validators/v1/auth.validator";
 
-// api-spec §3 — passwordless email OTP.
 export const authRouter = Router();
+
+// Email + password, no OTP. This is what the website uses for now.
+authRouter.post("/auth/register", registerLimiter, validate({ body: registerBodySchema }), authController.register);
+authRouter.post("/auth/login", loginLimiter, validate({ body: loginBodySchema }), authController.login);
+authRouter.post(
+  "/auth/forgot-password",
+  passwordResetLimiter,
+  validate({ body: forgotPasswordBodySchema }),
+  authController.forgotPassword,
+);
+authRouter.post("/auth/reset-password", loginLimiter, validate({ body: resetPasswordBodySchema }), authController.resetPassword);
+authRouter.post(
+  "/auth/change-password",
+  authGuard,
+  loginLimiter,
+  validate({ body: changePasswordBodySchema }),
+  authController.changePassword,
+);
+
+// api-spec §3 — passwordless email OTP. Kept so it can be switched back on; the website does not call it.
 
 authRouter.post(
   "/auth/request-otp",

@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { apiFetch } from "@/lib/api-client";
-import { fill } from "@/lib/format";
 
 type Mode = "login" | "register";
 type Props = { mode: Mode; locale: Locale; t: Dictionary["Auth"]; errors: Dictionary["Errors"] };
@@ -18,44 +17,44 @@ const ROLES = ["madrasa_teacher", "general_teacher", "madrasa_admin", "parent", 
 const safeNext = (next: string | null) =>
   next && /^\/(?![/\\])/.test(next) && !/[\\\u0000-\u001f]/.test(next) ? next : null;
 
-// Passwordless registration / login with a 6-digit email OTP (PRD §3.2, Flows 1–2).
+// Registration / login with email, mobile number or ATQ token, and password. The email-OTP flow is switched off for now.
 export function AuthForm({ mode, locale, t, errors }: Props) {
   const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const destination = next ?? localePath(locale, "/my-account");
   const otherHref = `${localePath(locale, mode === "login" ? "/register" : "/login")}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
-  const [step, setStep] = useState<"details" | "otp" | "token">("details");
-  const [form, setForm] = useState({ identifier: "", fullName: "", phone: "", email: "", role: "", institution: "", consent: false });
+  const [step, setStep] = useState<"details" | "token">("details");
+  const [form, setForm] = useState({
+    identifier: "",
+    password: "",
+    fullName: "",
+    phone: "",
+    email: "",
+    role: "",
+    institution: "",
+    consent: false,
+  });
+  const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [maskedEmail, setMaskedEmail] = useState("");
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState<{ text: string; toLogin?: boolean } | null>(null);
   const [pending, setPending] = useState(false);
   const [token, setToken] = useState("");
   const [copied, setCopied] = useState(false);
-  const boxes = useRef<(HTMLInputElement | null)[]>([]);
-
-  // 60-second resend cooldown (PRD §3.2.3).
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const id = setTimeout(() => setCooldown((s) => s - 1), 1000);
-    return () => clearTimeout(id);
-  }, [cooldown]);
 
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
   const errorText = (code: string) => errors[code as keyof typeof errors] ?? (code === "NETWORK_ERROR" ? t.networkError : errors.generic);
-  const otpBody = () => (mode === "register" ? { purpose: "register", email: form.email.trim() } : { purpose: "login", identifier: form.identifier.trim() });
 
-  function validateDetails() {
+  function validate() {
     const fe: Record<string, string> = {};
     if (mode === "login") {
       if (!form.identifier.trim()) fe.identifier = errors.VALIDATION_ERROR;
+      if (!form.password) fe.password = errors.VALIDATION_ERROR;
     } else {
       if (form.fullName.trim().length < 3) fe.fullName = errors.VALIDATION_ERROR;
       if (!/^01[3-9]\d{8}$/.test(form.phone)) fe.phone = errors.phone;
       if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) fe.email = errors.VALIDATION_ERROR;
+      if (form.password.length < 8 || form.password.length > 72) fe.password = errors.password;
       if (!form.role) fe.role = errors.VALIDATION_ERROR;
       if (!form.consent) fe.consent = errors.VALIDATION_ERROR;
     }
@@ -63,64 +62,36 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
     return Object.keys(fe).length === 0;
   }
 
-  async function requestOtp() {
-    setPending(true);
-    setError(null);
-    const res = await apiFetch<{ email: string; cooldownSeconds: number }>("/auth/request-otp", {
-      method: "POST",
-      locale,
-      body: otpBody(),
-    });
-    setPending(false);
-
-    if (res.ok) {
-      setMaskedEmail(res.data.email);
-      setCooldown(res.data.cooldownSeconds);
-      setOtp(Array(6).fill(""));
-      setStep("otp");
-      setTimeout(() => boxes.current[0]?.focus(), 0);
-      return;
-    }
-    if (res.code === "EMAIL_EXISTS") return setError({ text: t.emailExists, toLogin: true });
-    if (res.code === "NOT_FOUND") return setError({ text: t.notFound });
-    if (res.code === "OTP_COOLDOWN") {
-      const wait = Number(res.data?.retryAfterSeconds) || 60;
-      setCooldown(wait);
-      if (step === "details") setStep("otp");
-      return setError({ text: fill(t.resendIn, { s: wait }) });
-    }
-    setError({ text: errorText(res.code) });
-  }
-
-  async function onDetails(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (validateDetails()) await requestOtp();
-  }
-
-  async function onVerify(e: FormEvent) {
-    e.preventDefault();
-    const code = otp.join("");
-    if (!/^\d{6}$/.test(code)) return setError({ text: errors.otp });
+    if (!validate()) return;
 
     setPending(true);
     setError(null);
-    const body =
+    const res =
       mode === "register"
-        ? {
-            ...otpBody(),
-            otp: code,
-            fullName: form.fullName.trim(),
-            phone: form.phone,
-            role: form.role,
-            ...(form.institution.trim() && { institution: form.institution.trim() }),
-            privacyConsent: true,
-          }
-        : { ...otpBody(), otp: code };
-    const res = await apiFetch<{ user: { token: string }; isNewUser: boolean }>("/auth/verify-otp", { method: "POST", locale, body });
+        ? await apiFetch<{ user: { token: string } }>("/auth/register", {
+            method: "POST",
+            locale,
+            body: {
+              email: form.email.trim(),
+              password: form.password,
+              fullName: form.fullName.trim(),
+              phone: form.phone,
+              role: form.role,
+              ...(form.institution.trim() && { institution: form.institution.trim() }),
+              privacyConsent: true,
+            },
+          })
+        : await apiFetch<{ user: { token: string } }>("/auth/login", {
+            method: "POST",
+            locale,
+            body: { identifier: form.identifier.trim(), password: form.password },
+          });
     setPending(false);
 
     if (res.ok) {
-      if (res.data.isNewUser) {
+      if (mode === "register") {
         setToken(res.data.user.token);
         setStep("token");
       } else {
@@ -128,11 +99,8 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
       }
       return;
     }
-    if (res.code === "OTP_INVALID" && res.data?.attemptsLeft !== undefined) {
-      setOtp(Array(6).fill(""));
-      boxes.current[0]?.focus();
-      return setError({ text: `${errors.OTP_INVALID} ${fill(t.attemptsLeft, { n: Number(res.data.attemptsLeft) })}` });
-    }
+    if (res.code === "EMAIL_EXISTS") return setError({ text: t.emailExists, toLogin: true });
+    if (res.code === "INVALID_CREDENTIALS") return setError({ text: t.invalidCredentials });
     setError({ text: errorText(res.code) });
   }
 
@@ -141,37 +109,11 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
     router.refresh();
   }
 
-  function setDigit(i: number, value: string) {
-    const digits = value.replace(/\D/g, "");
-    if (!digits) {
-      setOtp((o) => o.map((d, j) => (j === i ? "" : d)));
-      return;
-    }
-    // Typing or autofill can deliver several digits into one box: spread them forward.
-    setOtp((o) => {
-      const copy = [...o];
-      for (let k = 0; k < digits.length && i + k < 6; k++) copy[i + k] = digits[k];
-      return copy;
-    });
-    boxes.current[Math.min(i + digits.length, 5)]?.focus();
-  }
-
-  function onOtpKey(i: number, e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace" && !otp[i] && i > 0) boxes.current[i - 1]?.focus();
-  }
-
-  function onOtpPaste(e: ClipboardEvent<HTMLInputElement>) {
-    const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!digits) return;
-    e.preventDefault();
-    setDigit(0, digits);
-  }
-
   const input = "mt-1 min-h-11 w-full rounded-md border border-neutral-sky bg-surface px-3 aria-invalid:border-accent-orange";
   const label = "block text-sm font-medium text-primary";
 
   const alert = error && (
-    <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-[#9a4d00]">
+    <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-warn">
       {error.text}{" "}
       {error.toLogin && (
         <Link href={localePath(locale, "/login")} className="font-semibold underline">
@@ -205,90 +147,67 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
     );
   }
 
-  if (step === "otp") {
-    return (
-      <form onSubmit={onVerify} noValidate className="space-y-5">
-        <div>
-          <h2 className="text-lg font-bold text-primary">{t.otpTitle}</h2>
-          {maskedEmail && <p className="mt-1 text-sm text-ink-soft">{fill(t.otpSent, { email: maskedEmail })}</p>}
-        </div>
-
-        <fieldset>
-          <legend className="sr-only">{t.otpLabel}</legend>
-          <div className="flex justify-between gap-2" dir="ltr">
-            {otp.map((d, i) => (
-              <input
-                key={i}
-                ref={(el) => {
-                  boxes.current[i] = el;
-                }}
-                value={d}
-                onChange={(e) => setDigit(i, e.target.value)}
-                onKeyDown={(e) => onOtpKey(i, e)}
-                onPaste={onOtpPaste}
-                inputMode="numeric"
-                autoComplete={i === 0 ? "one-time-code" : "off"}
-                maxLength={i === 0 ? 6 : 1}
-                aria-label={fill(t.otpDigit, { n: i + 1 })}
-                className="size-12 rounded-md border border-neutral-sky bg-surface text-center font-mono text-xl font-bold text-primary sm:size-14"
-              />
-            ))}
-          </div>
-        </fieldset>
-
-        {alert}
-
+  const passwordField = (
+    <div>
+      <label htmlFor="auth-password" className={label}>
+        {t.password}
+      </label>
+      <div className="relative">
+        <input
+          id="auth-password"
+          type={showPassword ? "text" : "password"}
+          autoComplete={mode === "login" ? "current-password" : "new-password"}
+          maxLength={72}
+          value={form.password}
+          onChange={(e) => set({ password: e.target.value })}
+          aria-invalid={Boolean(fieldErrors.password)}
+          aria-describedby={mode === "register" ? "auth-password-hint" : undefined}
+          className={`${input} pr-20`}
+        />
         <button
-          type="submit"
-          disabled={pending}
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-gold-cta px-5 font-semibold text-primary-dark hover:glow-gold disabled:opacity-60"
+          type="button"
+          onClick={() => setShowPassword((s) => !s)}
+          aria-pressed={showPassword}
+          className="absolute inset-y-0 right-2 mt-1 text-xs font-semibold text-primary-light underline"
         >
-          {pending ? t.verifying : t.verify}
+          {showPassword ? t.hidePassword : t.showPassword}
         </button>
-
-        <div className="flex items-center justify-between text-sm">
-          <button
-            type="button"
-            onClick={() => {
-              setStep("details");
-              setError(null);
-            }}
-            className="text-primary-light underline"
-          >
-            {t.changeEmail}
-          </button>
-          <button
-            type="button"
-            disabled={cooldown > 0 || pending}
-            onClick={requestOtp}
-            className="font-semibold text-gold-text underline disabled:text-ink-soft disabled:no-underline"
-          >
-            {cooldown > 0 ? fill(t.resendIn, { s: cooldown }) : t.resend}
-          </button>
-        </div>
-      </form>
-    );
-  }
+      </div>
+      {mode === "register" && (
+        <p id="auth-password-hint" className={`mt-1 text-sm ${fieldErrors.password ? "text-warn" : "text-ink-soft"}`}>
+          {fieldErrors.password ?? t.passwordHint}
+        </p>
+      )}
+    </div>
+  );
 
   return (
-    <form onSubmit={onDetails} noValidate className="space-y-4">
+    <form onSubmit={onSubmit} noValidate className="space-y-4">
       {mode === "login" ? (
-        <div>
-          <label htmlFor="auth-identifier" className={label}>
-            {t.identifier}
-          </label>
-          <input
-            id="auth-identifier"
-            type="text"
-            autoComplete="email"
-            autoCapitalize="none"
-            value={form.identifier}
-            onChange={(e) => set({ identifier: e.target.value })}
-            aria-invalid={Boolean(fieldErrors.identifier)}
-            placeholder="name@example.com / ATQ-2026-XXXXX"
-            className={input}
-          />
-        </div>
+        <>
+          <div>
+            <label htmlFor="auth-identifier" className={label}>
+              {t.identifier}
+            </label>
+            <input
+              id="auth-identifier"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              value={form.identifier}
+              onChange={(e) => set({ identifier: e.target.value })}
+              aria-invalid={Boolean(fieldErrors.identifier)}
+              placeholder="name@example.com / 01XXXXXXXXX"
+              className={input}
+            />
+          </div>
+          {passwordField}
+          <p className="-mt-2 text-right text-sm">
+            <Link href={localePath(locale, "/forgot-password")} className="font-semibold text-gold-text underline">
+              {t.forgotLink}
+            </Link>
+          </p>
+        </>
       ) : (
         <>
           <div>
@@ -322,7 +241,7 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
               placeholder="01XXXXXXXXX"
               className={`${input} font-mono`}
             />
-            <p id="auth-phone-hint" className={`mt-1 text-sm ${fieldErrors.phone ? "text-[#9a4d00]" : "text-ink-soft"}`}>
+            <p id="auth-phone-hint" className={`mt-1 text-sm ${fieldErrors.phone ? "text-warn" : "text-ink-soft"}`}>
               {fieldErrors.phone ?? t.phoneHint}
             </p>
           </div>
@@ -340,6 +259,7 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
               className={input}
             />
           </div>
+          {passwordField}
           <div>
             <label htmlFor="auth-role" className={label}>
               {t.role}
@@ -374,7 +294,7 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
               className={input}
             />
           </div>
-          <label className={`flex items-start gap-2 text-sm ${fieldErrors.consent ? "text-[#9a4d00]" : "text-ink-soft"}`}>
+          <label className={`flex items-start gap-2 text-sm ${fieldErrors.consent ? "text-warn" : "text-ink-soft"}`}>
             <input
               type="checkbox"
               checked={form.consent}
@@ -394,7 +314,7 @@ export function AuthForm({ mode, locale, t, errors }: Props) {
         disabled={pending}
         className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-gold-cta px-5 font-semibold text-primary-dark hover:glow-gold disabled:opacity-60"
       >
-        {pending ? t.sending : t.sendOtp}
+        {pending ? t.submitting : mode === "login" ? t.loginSubmit : t.registerSubmit}
       </button>
 
       <p className="text-center text-sm text-ink-soft">

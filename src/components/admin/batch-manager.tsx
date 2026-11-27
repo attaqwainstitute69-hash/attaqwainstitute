@@ -93,7 +93,7 @@ export function BatchManager({ courseId, batches, canDelete }: Props) {
               setEditing("new");
               setMessage(null);
             }}
-            className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-light"
+            className="inline-flex min-h-11 items-center rounded-md bg-navy dark:border dark:border-white/20 px-4 text-sm font-semibold text-white hover:bg-navy-light"
           >
             + নতুন ব্যাচ
           </button>
@@ -101,7 +101,7 @@ export function BatchManager({ courseId, batches, canDelete }: Props) {
       </div>
 
       {message && (
-        <p role="status" className={`mt-3 rounded-md p-3 text-sm ${message.ok ? "bg-[#1f7a4a]/10 text-[#1f7a4a]" : "bg-accent-orange/10 text-[#9a4d00]"}`}>
+        <p role="status" className={`mt-3 rounded-md p-3 text-sm ${message.ok ? "bg-success/10 text-success" : "bg-accent-orange/10 text-warn"}`}>
           {message.text}
         </p>
       )}
@@ -150,7 +150,7 @@ export function BatchManager({ courseId, batches, canDelete }: Props) {
                     <p className="text-ink-soft">
                       শুরু: {formatDate(b.startDate, "bn")} · {b.scheduleDetails}
                     </p>
-                    <p className={b.remainingSeats === 0 ? "font-semibold text-[#9a4d00]" : "text-ink-soft"}>
+                    <p className={b.remainingSeats === 0 ? "font-semibold text-warn" : "text-ink-soft"}>
                       আসন: {formatNumber(b.enrolledCount, "bn")}/{formatNumber(b.seatCapacity, "bn")} অনুমোদিত
                       {b.remainingSeats === 0 ? " — পূর্ণ" : ` (${formatNumber(b.remainingSeats, "bn")}টি বাকি)`}
                     </p>
@@ -196,7 +196,7 @@ export function BatchManager({ courseId, batches, canDelete }: Props) {
                         <button
                           type="button"
                           onClick={() => setConfirmDelete(b._id)}
-                          className="min-h-10 rounded-md px-3 text-[#9a4d00] underline"
+                          className="min-h-10 rounded-md px-3 text-warn underline"
                         >
                           মুছুন
                         </button>
@@ -280,7 +280,7 @@ function BatchForm({ initial, busy, submitLabel, minSeats = 0, onSubmit, onCance
         চালু (ওয়েবসাইটে দেখাবে ও ভর্তি নেবে)
       </label>
       {error && (
-        <p role="alert" className="text-sm text-[#9a4d00]">
+        <p role="alert" className="text-sm text-warn">
           {error}
         </p>
       )}

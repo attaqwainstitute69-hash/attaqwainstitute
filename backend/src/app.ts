@@ -10,7 +10,7 @@ import { originGuard } from "./api/middlewares/originGuard";
 import { notFoundHandler, unsupportedVersionHandler } from "./api/middlewares/notFoundHandler";
 import { errorHandler } from "./api/middlewares/errorHandler";
 
-const SPEC_VERSION = "1.0.0";
+const SPEC_VERSION = "1.1.0";
 
 export const app = express();
 

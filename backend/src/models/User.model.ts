@@ -12,6 +12,11 @@ export interface IUser {
   institution?: string;
   isVerified: boolean;
   privacyConsent: boolean;
+  // Absent on accounts created with the old email-OTP flow.
+  passwordHash?: string;
+  // Forgot-password link: SHA-256 of the emailed token, single use, short-lived.
+  resetTokenHash?: string;
+  resetTokenExpiresAt?: Date;
   sessionVersion: number;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +56,10 @@ const userSchema = new Schema<IUser>(
     institution: { type: String, maxlength: 150 },
     isVerified: { type: Boolean, default: false },
     privacyConsent: { type: Boolean, required: true },
+    // Never returned by queries unless asked for with "+passwordHash".
+    passwordHash: { type: String, select: false },
+    resetTokenHash: { type: String, select: false, index: { sparse: true } },
+    resetTokenExpiresAt: { type: Date, select: false },
     // Part of every JWT. Logout bumps it, so every token issued before stops working (backend.md §5.1).
     sessionVersion: { type: Number, default: 0 },
   },

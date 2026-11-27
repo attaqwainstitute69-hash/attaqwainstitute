@@ -57,7 +57,7 @@ export function ResubmitForm({ enrollmentId, locale, t, enroll, errors }: Props)
       <p className="font-semibold text-primary">{t.resubmitTitle}</p>
       <PaymentFields values={values} onChange={setValues} errors={fieldErrors} t={enroll} idPrefix={`resubmit-${enrollmentId}`} />
       {error && (
-        <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-[#9a4d00]">
+        <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-warn">
           {error}
         </p>
       )}

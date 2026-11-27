@@ -17,6 +17,11 @@ const envSchema = z
     // Set to ".attaqwainstitute.com" in production so the Next.js server can read the cookie too.
     COOKIE_DOMAIN: z.string().optional(),
     OTP_SECRET: z.string().min(32),
+    // AES-256 key for confidential fields (counselling cases): 32 random bytes, base64.
+    // Generate with `openssl rand -base64 32`. Losing it makes those fields unreadable — keep a backup.
+    DATA_ENCRYPTION_KEY: z
+      .string()
+      .refine((v) => Buffer.from(v, "base64").length === 32, "Must be 32 bytes, base64 (openssl rand -base64 32)"),
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().default("At-Taqwa Institute <no-reply@attaqwainstitute.com>"),
     BKASH_MERCHANT_NUMBER: z.string().default(""),
@@ -41,6 +46,10 @@ const envSchema = z
   .refine((e) => e.JWT_SECRET !== e.OTP_SECRET, {
     path: ["OTP_SECRET"],
     message: "Must differ from JWT_SECRET",
+  })
+  .refine((e) => e.DATA_ENCRYPTION_KEY !== e.JWT_SECRET && e.DATA_ENCRYPTION_KEY !== e.OTP_SECRET, {
+    path: ["DATA_ENCRYPTION_KEY"],
+    message: "Must differ from JWT_SECRET and OTP_SECRET",
   });
 
 const parsed = envSchema.safeParse(process.env);

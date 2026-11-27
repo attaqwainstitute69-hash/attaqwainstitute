@@ -5,14 +5,18 @@ import { useState, type FormEvent } from "react";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { apiFetch } from "@/lib/api-client";
-import { fill } from "@/lib/format";
+import { fill, formatNumber } from "@/lib/format";
 import { whatsappLink } from "@/lib/site";
+import { PaymentLogo } from "./payment-icons";
+import { WaitlistButton } from "./waitlist-button";
 import { PaymentFields, paymentErrors, type PaymentValues } from "./payment-fields";
 
 type Props = {
   locale: Locale;
   loggedIn: boolean;
+  onWaitlist: boolean;
   course: {
+    _id: string;
     slug: string;
     title: string;
     price: string;
@@ -24,7 +28,7 @@ type Props = {
 };
 
 // Flow 3: choose batch → pay by bKash/Nagad → submit sender number + TrxID → "pending" (PRD §3.4).
-export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
+export function EnrollPanel({ locale, loggedIn, onWaitlist, course, t, errors }: Props) {
   const firstOpen = course.batches.find((b) => !b.isHouseful) ?? course.batches[0];
   const [batchId, setBatchId] = useState(firstOpen._id);
   const [values, setValues] = useState<PaymentValues>({ paymentMethod: "bkash", senderNumber: "", trxId: "" });
@@ -97,17 +101,9 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
       )}
 
       {batch.isHouseful ? (
-        // No waitlist API yet (api-spec §13 #1), so the waitlist goes through WhatsApp click-to-chat.
-        <div className="mt-4">
+        <div className="mt-4 space-y-3">
           <p className="text-sm text-ink-soft">{t.housefulText}</p>
-          <a
-            href={`${whatsappLink}?text=${encodeURIComponent(fill(t.waitlistMessage, { course: course.title }))}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-5 font-semibold text-white hover:bg-primary-light"
-          >
-            {t.joinWaitlist}
-          </a>
+          <WaitlistButton locale={locale} loggedIn={loggedIn} onWaitlist={onWaitlist} course={course} t={t} errors={errors} />
         </div>
       ) : !loggedIn ? (
         <div className="mt-4">
@@ -129,19 +125,23 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
         </div>
       ) : (
         <form onSubmit={submit} noValidate className="mt-4 space-y-4">
+          <PaymentSteps steps={t.steps} locale={locale} />
           <div className="rounded-lg bg-neutral-light p-3 text-sm text-ink-soft">
-            <p>{fill(t.step1, { fee: course.price })}</p>
+            <p className="flex gap-2">
+              <StepNo n={1} locale={locale} />
+              <span>{fill(t.step1, { fee: course.price })}</span>
+            </p>
             {course.paymentInfo.bkash || course.paymentInfo.nagad ? (
-              <ul className="mt-2 space-y-1 font-medium text-primary">
-                {course.paymentInfo.bkash && (
-                  <li>
-                    {t.bkash}: <span className="font-mono">{course.paymentInfo.bkash}</span>
-                  </li>
-                )}
-                {course.paymentInfo.nagad && (
-                  <li>
-                    {t.nagad}: <span className="font-mono">{course.paymentInfo.nagad}</span>
-                  </li>
+              <ul className="mt-2 space-y-2">
+                {(["bkash", "nagad"] as const).map(
+                  (m) =>
+                    course.paymentInfo[m] && (
+                      <li key={m} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-sky bg-white px-3 py-2">
+                        <PaymentLogo method={m} />
+                        <span className="sr-only">{t[m]}:</span>
+                        <span className="font-mono font-semibold text-navy">{course.paymentInfo[m]}</span>
+                      </li>
+                    ),
                 )}
               </ul>
             ) : (
@@ -151,7 +151,10 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
                 </a>
               </p>
             )}
-            <p className="mt-2">{t.step2}</p>
+            <p className="mt-3 flex gap-2">
+              <StepNo n={2} locale={locale} />
+              <span>{t.step2}</span>
+            </p>
           </div>
 
           <PaymentFields values={values} onChange={setValues} errors={fieldErrors} t={t} idPrefix="enroll" />
@@ -171,7 +174,7 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
           </div>
 
           {error && (
-            <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-[#9a4d00]">
+            <p role="alert" className="rounded-md bg-accent-orange/10 p-3 text-sm text-warn">
               {error.text}{" "}
               {error.toAccount && (
                 <Link href={account} className="font-semibold underline">
@@ -192,5 +195,35 @@ export function EnrollPanel({ locale, loggedIn, course, t, errors }: Props) {
         </form>
       )}
     </section>
+  );
+}
+
+// Payment step indicator (Payment process.jpg reference). The form covers the first two steps;
+// the third (admin verification) happens after submit, so it is shown as upcoming.
+function PaymentSteps({ steps, locale }: { steps: string[]; locale: Locale }) {
+  return (
+    <ol className="flex items-start">
+      {steps.map((label, i) => (
+        <li key={label} className="relative flex flex-1 flex-col items-center text-center">
+          {i > 0 && <span aria-hidden="true" className={`absolute top-4 right-1/2 h-0.5 w-full ${i < 2 ? "bg-accent-gold" : "bg-neutral-sky"}`} />}
+          <span
+            className={`relative z-10 flex size-8 items-center justify-center rounded-full text-sm font-bold ${
+              i < 2 ? "bg-gold-cta text-primary-dark" : "border-2 border-neutral-sky bg-surface text-ink-soft"
+            }`}
+          >
+            {formatNumber(i + 1, locale)}
+          </span>
+          <span className={`mt-1.5 text-xs ${i < 2 ? "font-semibold text-primary" : "text-ink-soft"}`}>{label}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function StepNo({ n, locale }: { n: number; locale: Locale }) {
+  return (
+    <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gold-cta text-xs font-bold text-primary-dark">
+      {formatNumber(n, locale)}
+    </span>
   );
 }

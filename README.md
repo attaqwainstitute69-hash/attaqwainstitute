@@ -17,7 +17,7 @@ npm run dev                  # http://localhost:3000 → redirects to /bn
 
 ```
 messages/            UI strings: bn.json (required), en.json
-public/logo.jpg      Institute logo
+public/logo.png      Institute logo (transparent PNG)
 src/
   proxy.ts           Redirects unprefixed URLs to /bn (PRD §3.3)
   i18n/              Locale config + dictionaries (read via next/root-params)

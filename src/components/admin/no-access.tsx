@@ -6,7 +6,7 @@ export function NoAccess({ text = "এই পাতাটি দেখার অ
     <div className="rounded-xl border border-accent-orange/40 bg-surface p-8 text-center">
       <p className="text-lg font-semibold text-primary">{text}</p>
       <p className="mt-2 text-sm text-ink-soft">প্রয়োজন হলে সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
-      <Link href="/bn" className="mt-6 inline-flex min-h-11 items-center rounded-md bg-primary px-5 font-semibold text-white">
+      <Link href="/bn" className="mt-6 inline-flex min-h-11 items-center rounded-md bg-navy dark:border dark:border-white/20 px-5 font-semibold text-white">
         ওয়েবসাইটে ফিরে যান
       </Link>
     </div>

@@ -54,7 +54,7 @@ export function EnrollmentActions({ enrollmentId, seatsFull }: { enrollmentId: s
   return (
     <div className="mt-4 border-t border-neutral-sky/60 pt-4">
       {message && (
-        <p role="status" className={`mb-3 rounded-md p-3 text-sm ${message.ok ? "bg-[#1f7a4a]/10 text-[#1f7a4a]" : "bg-accent-orange/10 text-[#9a4d00]"}`}>
+        <p role="status" className={`mb-3 rounded-md p-3 text-sm ${message.ok ? "bg-success/10 text-success" : "bg-accent-orange/10 text-warn"}`}>
           {message.text}
         </p>
       )}
@@ -73,7 +73,7 @@ export function EnrollmentActions({ enrollmentId, seatsFull }: { enrollmentId: s
           <button
             type="button"
             onClick={() => setMode("reject")}
-            className="inline-flex min-h-11 items-center rounded-md border border-accent-orange px-5 font-semibold text-[#9a4d00] hover:bg-accent-orange/10"
+            className="inline-flex min-h-11 items-center rounded-md border border-accent-orange px-5 font-semibold text-warn hover:bg-accent-orange/10"
           >
             ✕ বাতিল
           </button>
@@ -81,7 +81,7 @@ export function EnrollmentActions({ enrollmentId, seatsFull }: { enrollmentId: s
       )}
 
       {mode === "approve" && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-[#1f7a4a]/5 p-3">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-success/5 p-3">
           <p className="text-sm text-primary">স্টেটমেন্টে TrxID ও টাকা মিলিয়েছেন? অনুমোদনে একটি আসন নেওয়া হবে এবং শিক্ষার্থীকে ইমেইল যাবে।</p>
           <button
             type="button"

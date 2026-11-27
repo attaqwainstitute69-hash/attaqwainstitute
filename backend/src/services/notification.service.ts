@@ -42,6 +42,24 @@ export const notificationService = {
     });
   },
 
+  sendPasswordResetEmail(to: string, info: { fullName: string; url: string; expiresInMinutes: number }) {
+    const body = `আপনার অ্যাকাউন্টের পাসওয়ার্ড রিসেট করার অনুরোধ এসেছে। নিচের লিংকে গিয়ে নতুন পাসওয়ার্ড দিন। লিংকটি ${info.expiresInMinutes} মিনিট কার্যকর এবং একবারই ব্যবহার করা যাবে।`;
+    const ignore = "আপনি অনুরোধ না করে থাকলে এই ইমেইলটি উপেক্ষা করুন, আপনার পাসওয়ার্ড বদলাবে না।";
+    return send({
+      to,
+      subject: "পাসওয়ার্ড রিসেট — আত-তাকওয়া ইনস্টিটিউট",
+      text: `আসসালামু আলাইকুম ${info.fullName},\n${body}\n\n${info.url}\n\n${ignore}\n\n— আত-তাকওয়া ইনস্টিটিউট`,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto">
+          <p>আসসালামু আলাইকুম ${escapeHtml(info.fullName)},</p>
+          <p>${escapeHtml(body)}</p>
+          <p><a href="${info.url}" style="display:inline-block;background:#d4a843;color:#0f1a2e;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold">নতুন পাসওয়ার্ড দিন</a></p>
+          <p style="color:#4a4f5e;font-size:13px">${escapeHtml(ignore)}</p>
+          <p>— আত-তাকওয়া ইনস্টিটিউট</p>
+        </div>`,
+    });
+  },
+
   // Post-approval confirmation (PRD §3.5). Class details stay in /my-account, never in the email.
   sendApprovalEmail(to: string, info: { fullName: string; token: string; courseTitle: string }) {
     const accountUrl = `${env.FRONTEND_URL}/bn/my-account`;
@@ -55,6 +73,27 @@ export const notificationService = {
           <p>আসসালামু আলাইকুম ${escapeHtml(info.fullName)},</p>
           <p>${escapeHtml(body)}</p>
           <p><a href="${accountUrl}" style="display:inline-block;background:#d4a843;color:#0f1a2e;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold">ড্যাশবোর্ড দেখুন</a></p>
+          <p>— আত-তাকওয়া ইনস্টিটিউট</p>
+        </div>`,
+    });
+  },
+
+  // Staff alert for confidential intakes. Only the reference number — never the parent's name,
+  // phone or message — so nothing sensitive sits in mailboxes (PRD Flow 5).
+  sendCounsellingAlert(to: string, info: { referenceNo: string; assigned: boolean }) {
+    const adminUrl = `${env.FRONTEND_URL}/admin/counselling`;
+    const body = info.assigned
+      ? `একটি কাউন্সেলিং কেস আপনাকে দায়িত্ব দেওয়া হয়েছে (রেফারেন্স: ${info.referenceNo})।`
+      : `একটি নতুন কাউন্সেলিং অনুরোধ এসেছে (রেফারেন্স: ${info.referenceNo})। একজন কাউন্সেলর নির্ধারণ করুন।`;
+    return send({
+      to,
+      subject: info.assigned ? "নতুন কাউন্সেলিং কেস দায়িত্ব" : "নতুন কাউন্সেলিং অনুরোধ",
+      text: `আসসালামু আলাইকুম,\n${body}\n\nবিস্তারিত: ${adminUrl}\n\n— আত-তাকওয়া ইনস্টিটিউট`,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto">
+          <p>আসসালামু আলাইকুম,</p>
+          <p>${escapeHtml(body)}</p>
+          <p><a href="${adminUrl}" style="display:inline-block;background:#d4a843;color:#0f1a2e;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold">অ্যাডমিন প্যানেলে দেখুন</a></p>
           <p>— আত-তাকওয়া ইনস্টিটিউট</p>
         </div>`,
     });

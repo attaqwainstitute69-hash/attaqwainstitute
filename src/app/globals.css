@@ -1,46 +1,108 @@
 @import "tailwindcss";
 
-/* Brand palette from PRD §1.6 (derived from the official logo). Use these names in classes:
-   bg-primary, text-accent-gold, border-neutral-sky, … */
+/* `dark:` follows the resolved theme on <html data-theme>, set before paint by the script in theme.tsx. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Brand palette: lime-green on near-black, after the chosen homepage reference (frontend.md §2).
+   Token names are kept from the original navy/gold palette so every existing class keeps working:
+   "gold" is now the lime accent, "navy" the near-black fill, "sky" pale lime.
+   Tokens that sit on the page canvas (text, surfaces, borders) are redefined for dark mode below;
+   dark fills (bg-navy, bg-hero) and the lime/green accents are the same in both themes. */
 @theme {
-  --color-primary-dark: #0f1a2e; /* Deep Navy — deep backgrounds, footer, contrast text */
-  --color-primary: #1b2a4a; /* Navy Blue — navbar, headers, dark cards */
-  --color-primary-light: #2c4a7b; /* Royal Blue — secondary accents, active links */
-  --color-accent-orange: #e8912a; /* Sunrise Orange — badges, notification dots */
-  --color-accent-gold: #d4a843; /* Gold Yellow — primary CTAs, highlights, active icons */
-  --color-accent-gold-light: #f0c75e; /* Bright Gold — gradient midpoints, hover glow */
-  --color-neutral-sky: #a8d8ea; /* Light Sky — card borders, subtle badges */
-  --color-neutral-light: #fdf8ef; /* Cream White — section backgrounds, page canvas */
+  --color-primary-dark: #070a06; /* Deepest black — footer, deep backgrounds, text on lime */
+  --color-primary: #121a0e; /* Near-black green — headings and body accents (light in dark mode) */
+  --color-primary-light: #2f7a14; /* Forest green — secondary accents, active links */
+  --color-accent-orange: #4fd13a; /* Signal green — badges, notification dots */
+  --color-accent-gold: #b8ec2c; /* Lime — primary CTAs, highlights, active icons */
+  --color-accent-gold-light: #d7f542; /* Bright lime — gradient midpoints, hover glow */
+  --color-neutral-sky: #d6e6c0; /* Pale sage — card borders, subtle badges */
+  --color-neutral-light: #f6f9ef; /* Off-white with a lime tint — section backgrounds, page canvas */
 
-  /* Supporting tokens (not in the PRD palette). Gold and orange fail WCAG AA as text on light
-     backgrounds, so text uses gold-text; the PRD colours stay for fills, borders and icons (F19). */
-  --color-gold-text: #8a5a00;
-  --color-primary-50: #eef1f7; /* hover tint on light backgrounds */
+  /* Near-black as a fill: buttons, chips and dark sections stay dark in both themes. */
+  --color-navy: #0d120b;
+  --color-navy-light: #1a2416;
+  --color-sky: #cdeb9a;
+
+  /* Supporting tokens. Lime and green fail WCAG AA as text on light backgrounds, so text uses
+     gold-text; the bright colours stay for fills, borders and icons (F19). */
+  --color-gold-text: #3d6b00;
+  --color-primary-50: #edf5e0; /* hover tint on light backgrounds */
   --color-surface: #ffffff;
-  --color-ink: #0f1a2e;
-  --color-ink-soft: #4a4f5e;
+  --color-ink: #0d120b;
+  --color-ink-soft: #4a5245;
+  --color-warn: #9a4d00; /* error / warning text */
+  --color-success: #1f7a4a; /* approved / success text */
 
-  /* SolaimanLipi is preferred once self-hosted (PRD §1.7); Noto Sans Bengali (next/font) is the loaded fallback. */
-  --font-sans: "SolaimanLipi", var(--font-noto-bengali), "Hind Siliguri", var(--font-inter), sans-serif;
-  --font-latin: var(--font-inter), var(--font-noto-bengali), sans-serif;
+  /* SolaimanLipi, self-hosted via next/font/local (src/app/fonts); Plus Jakarta Sans for English pages. */
+  --font-sans: var(--font-solaiman), "SolaimanLipi", "Hind Siliguri", sans-serif;
+  --font-latin: var(--font-jakarta), var(--font-solaiman), sans-serif;
 }
 
-/* Core gradients (PRD §1.6) */
+/* Dark theme: near-black canvas, light text. All pairs keep WCAG AA contrast on --color-surface. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-primary: #eef6e4;
+  --color-primary-light: #a6e85a;
+  --color-neutral-sky: #26321f;
+  --color-neutral-light: #090c08;
+  --color-gold-text: #c6f432;
+  --color-primary-50: #182114;
+  --color-surface: #11170e;
+  --color-ink: #eef6e4;
+  --color-ink-soft: #a9b5a0;
+  --color-warn: #ffb36b;
+  --color-success: #63d69d;
+}
+
+/* Core gradients */
+/* Dark hero: lime glow from the top, a green glow on the right, and a faint grid over near-black. */
 @utility bg-hero {
-  background-image: linear-gradient(135deg, #0f1a2e 0%, #1b2a4a 45%, #2c4a7b 100%);
+  background-color: #0b0f0a;
+  background-image:
+    radial-gradient(ellipse 60% 45% at 50% -8%, rgb(215 245 66 / 0.32), transparent 70%),
+    radial-gradient(ellipse 45% 55% at 100% 70%, rgb(79 209 58 / 0.22), transparent 70%),
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
 }
 @utility bg-gold-cta {
-  background-image: linear-gradient(135deg, #d4a843 0%, #f0c75e 50%, #d4a843 100%);
+  background-image: linear-gradient(135deg, #d7f542 0%, #b8ec2c 50%, #6fdc34 100%);
 }
 @utility bg-sunrise {
-  background-image: linear-gradient(180deg, #e8912a 0%, #d4a843 50%, #f0c75e 100%);
+  background-image: linear-gradient(180deg, #4fd13a 0%, #b8ec2c 50%, #d7f542 100%);
+}
+/* Spotlight behind the logo: a lime glow fading into near-black. */
+@utility bg-spotlight {
+  background-color: #090c08;
+  background-image:
+    radial-gradient(ellipse 75% 85% at 50% 42%, rgb(215 245 66 / 0.85) 0%, rgb(140 220 50 / 0.55) 28%, rgb(40 110 20 / 0.3) 55%, transparent 82%),
+    linear-gradient(180deg, #0d120b 0%, #090c08 100%);
 }
 @utility bg-card {
-  background-image: linear-gradient(180deg, #ffffff 0%, #fdf8ef 100%);
+  background-image: linear-gradient(180deg, var(--color-surface) 0%, var(--color-neutral-light) 100%);
 }
-/* Hover glow for gold CTAs ("Bright Gold — hover glow shadows") */
+/* Faint grid for dark panels other than the hero. */
+@utility bg-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+/* Hover glow for lime CTAs */
 @utility glow-gold {
-  box-shadow: 0 0 0 1px rgb(240 199 94 / 0.6), 0 8px 24px -6px rgb(240 199 94 / 0.55);
+  box-shadow: 0 0 0 1px rgb(215 245 66 / 0.6), 0 8px 28px -6px rgb(184 236 44 / 0.6);
+}
+
+/* Card hover: lift a little. Pairs with the existing hover:border-accent-gold. */
+@utility lift {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px -14px rgb(13 18 11 / 0.35);
+  }
 }
 
 body {
@@ -49,6 +111,9 @@ body {
   font-family: var(--font-sans);
   font-size: 1rem; /* Bengali body text ≥ 16px (F19) */
   line-height: 1.7;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 html[lang="en"] body {
@@ -58,4 +123,139 @@ html[lang="en"] body {
 :focus-visible {
   outline: 3px solid var(--color-accent-gold);
   outline-offset: 2px;
+}
+
+/* ---------- Motion. Everything below is off for users who prefer reduced motion. ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Scroll reveal. Mark an element with data-reveal (or ="left" / ="zoom"), or a list with
+     data-reveal-stagger to bring its children in one after another.
+     Where the browser has scroll-driven animations, CSS alone runs it off each element's position in
+     the viewport: no JavaScript touches the DOM, so nothing can disturb React hydration. */
+  @supports (animation-timeline: view()) {
+    [data-reveal],
+    [data-reveal-stagger] > * {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 85%;
+    }
+    [data-reveal="left"] {
+      animation-name: reveal-left;
+    }
+    [data-reveal="zoom"] {
+      animation-name: reveal-zoom;
+    }
+    /* Items side by side enter the viewport together; shift each one's range a little to stagger them. */
+    [data-reveal-stagger] > :nth-child(3n + 2) {
+      animation-range: entry 15% entry 95%;
+    }
+    [data-reveal-stagger] > :nth-child(3n + 3) {
+      animation-range: entry 25% cover 30%;
+    }
+  }
+
+  /* Older browsers (e.g. Firefox): scroll-reveal.tsx adds .reveal-fallback to <html> and .is-visible
+     on entry. Without JavaScript nothing is hidden. */
+  .reveal-fallback [data-reveal],
+  .reveal-fallback [data-reveal-stagger] > * {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-fallback [data-reveal-stagger] > :nth-child(2) {
+    transition-delay: 90ms;
+  }
+  .reveal-fallback [data-reveal-stagger] > :nth-child(3) {
+    transition-delay: 180ms;
+  }
+  .reveal-fallback [data-reveal-stagger] > :nth-child(n + 4) {
+    transition-delay: 270ms;
+  }
+  .reveal-fallback [data-reveal].is-visible,
+  .reveal-fallback [data-reveal-stagger].is-visible > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Hero entrance on page load. */
+  .hero-rise > * {
+    animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-rise > :nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .hero-rise > :nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .hero-rise > :nth-child(4) {
+    animation-delay: 0.3s;
+  }
+
+  /* Slow drifting glow behind the hero text. */
+  .hero-glow {
+    animation: hero-glow 14s ease-in-out infinite alternate;
+  }
+
+  /* Reading progress bar in the header, driven by scroll position where the browser supports it. */
+  @supports (animation-timeline: scroll()) {
+    .scroll-progress {
+      display: block;
+      transform-origin: 0 50%;
+      animation: scroll-progress linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+.scroll-progress {
+  display: none;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes reveal-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+}
+@keyframes reveal-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+/* Slide only, no fade: hero text is visible from the first frame, so it counts for LCP right away. */
+@keyframes hero-rise {
+  from {
+    transform: translateY(24px);
+  }
+}
+@keyframes hero-glow {
+  to {
+    transform: translate(-8%, 6%) scale(1.15);
+  }
+}
+@keyframes scroll-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Header gets a shadow once the page is scrolled (scroll-reveal.tsx sets data-scrolled). */
+html[data-scrolled] .site-header {
+  box-shadow: 0 6px 20px -12px rgb(13 18 11 / 0.45);
 }
