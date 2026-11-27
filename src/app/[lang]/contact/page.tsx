@@ -3,8 +3,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { localePath, locales } from "@/i18n/config";
 import { getDictionary, getLocale } from "@/i18n/dictionaries";
-import { site, whatsappLink } from "@/lib/site";
+import { mapEmbedUrl, site, whatsappLink } from "@/lib/site";
 import { ContactForm } from "@/components/forms/contact-form";
+import { WhatsAppGlyph, WhatsAppLogo } from "@/components/whatsapp-button";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -32,7 +33,6 @@ export default async function ContactPage() {
   const locale = await getLocale();
   const t = await getDictionary();
   const tc = t.Contact;
-  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(site.address.en)}&z=15&output=embed`;
 
   return (
     <>
@@ -64,9 +64,11 @@ export default async function ContactPage() {
           <h2 className="relative mt-2 text-2xl leading-snug font-bold md:text-3xl">{tc.infoTitle}</h2>
           <hr className="relative my-7 border-white/15" />
 
-          <dl className="relative space-y-6">
+          <ul className="relative space-y-6">
             <InfoRow icon={<PinIcon />} label={t.Home.contactAddress}>
-              {site.address[locale]}
+              <a href={site.mapLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                {site.address[locale]} ↗
+              </a>
             </InfoRow>
             <InfoRow icon={<MailIcon />} label={t.Home.contactEmail}>
               <a href={`mailto:${site.email}`} className="break-all hover:underline">
@@ -80,7 +82,24 @@ export default async function ContactPage() {
                 </a>
               ))}
             </InfoRow>
-          </dl>
+            <InfoRow icon={<WhatsAppLogo />} bare label={t.Common.whatsapp}>
+              <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="font-mono hover:underline">
+                +{site.whatsapp}
+              </a>
+            </InfoRow>
+          </ul>
+
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative mt-7 inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[#25D366] py-1.5 pr-6 pl-1.5 font-semibold text-[#0b2e17] shadow-lg transition hover:brightness-105"
+          >
+            <span className="inline-flex size-9 items-center justify-center rounded-full bg-white text-[#25D366]">
+              <WhatsAppGlyph size={20} />
+            </span>
+            {t.Common.whatsapp}
+          </a>
 
           <p className="relative mt-6 text-sm text-white/70">{tc.hours}</p>
           <hr className="relative my-7 border-white/15" />
@@ -90,9 +109,9 @@ export default async function ContactPage() {
             <SocialLink href={site.facebook} label={tc.facebook}>
               <path d="M14 8h3V4h-3c-2.8 0-4 1.8-4 4.2V10H7v4h3v8h4v-8h3l1-4h-4V8.6c0-.4.2-.6.6-.6Z" />
             </SocialLink>
-            <SocialLink href={whatsappLink} label={t.Common.whatsapp}>
-              <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2Zm5.8 14.13c-.24.68-1.42 1.3-1.95 1.35-.5.05-.97.23-3.28-.68-2.78-1.1-4.54-3.94-4.68-4.12-.13-.18-1.12-1.49-1.12-2.84s.71-2.01.96-2.29c.25-.27.55-.34.73-.34h.52c.17 0 .4-.06.62.47.24.56.8 1.94.87 2.08.07.14.12.3.02.48-.09.18-.14.3-.27.46l-.41.48c-.14.14-.28.29-.12.56.16.27.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.2 1.36.27.14.43.11.59-.07.16-.18.68-.79.86-1.06.18-.27.36-.23.61-.14.25.09 1.58.75 1.85.88.27.14.45.2.52.32.07.11.07.66-.17 1.35Z" />
-            </SocialLink>
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer" aria-label={t.Common.whatsapp} className="rounded-full transition hover:scale-105">
+              <WhatsAppLogo className="size-10" />
+            </a>
           </div>
         </aside>
       </section>
@@ -123,7 +142,7 @@ export default async function ContactPage() {
 
       {/* Full-width map, as in the reference. */}
       <iframe
-        src={mapSrc}
+        src={mapEmbedUrl}
         title={t.Home.mapTitle}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
@@ -133,17 +152,22 @@ export default async function ContactPage() {
   );
 }
 
-function InfoRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
+// `bare` drops the white circle for icons that bring their own (the WhatsApp logo).
+function InfoRow({ icon, label, bare = false, children }: { icon: ReactNode; label: string; bare?: boolean; children: ReactNode }) {
   return (
-    <div className="flex gap-4">
-      <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white text-navy">
-        {icon}
-      </span>
+    <li className="flex gap-4">
+      {bare ? (
+        icon
+      ) : (
+        <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white text-navy">
+          {icon}
+        </span>
+      )}
       <div>
-        <dt className="font-semibold text-accent-gold-light">{label}</dt>
-        <dd className="mt-0.5 text-white/90">{children}</dd>
+        <p className="font-semibold text-accent-gold-light">{label}</p>
+        <div className="mt-0.5 text-white/90">{children}</div>
       </div>
-    </div>
+    </li>
   );
 }
 

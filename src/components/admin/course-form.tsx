@@ -5,8 +5,10 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { refreshPublicCourses } from "@/app/admin/actions";
 import { apiFetch } from "@/lib/api-client";
 import type { AdminCourse } from "@/lib/api-types";
+import { controlClass } from "@/components/ui";
+import { MediaUploadButton, UploadField } from "./upload-field";
 
-export const inputClass = "mt-1 min-h-11 w-full rounded-md border border-neutral-sky bg-surface px-3";
+export const inputClass = `mt-1 ${controlClass}`;
 export const labelClass = "block text-sm font-medium text-primary";
 
 const PILLARS = [
@@ -42,6 +44,7 @@ function initialState(course?: AdminCourse) {
     trainerBio: course?.trainerBio ?? "",
     trainerPhoto: course?.trainerPhoto ?? "",
     coverImage: course?.coverImage ?? "",
+    images: (course?.media ?? []).filter((m) => m.kind === "image").map((m) => m.url).join("\n"),
     videos: (course?.media ?? []).filter((m) => m.kind === "video").map((m) => m.url).join("\n"),
   };
 }
@@ -65,6 +68,9 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
+  // Appends an uploaded file's URL as a new line of the images / videos list.
+  const addLine = (key: "images" | "videos") => (url: string) =>
+    setForm((f) => ({ ...f, [key]: f[key].trim() ? `${f[key].trim()}\n${url}` : url }));
   const setModule = (i: number, patch: Partial<Module>) =>
     setModules((ms) => ms.map((m, j) => (j === i ? { ...m, ...patch } : m)));
 
@@ -72,8 +78,6 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
     const lines = (s: string) => s.split("\n").map((l) => l.trim()).filter(Boolean);
     // Empty optional fields are left out: the API rejects empty strings.
     const optional = (key: keyof typeof form) => (form[key].trim() ? { [key]: form[key].trim() } : {});
-    // Images already on the course stay; the video list is replaced by the textarea.
-    const keptImages = (course?.media ?? []).filter((m) => m.kind !== "video");
 
     return {
       ...(!course && { slug: form.slug.trim() }),
@@ -92,7 +96,10 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
       syllabus: modules
         .filter((m) => m.titleBn.trim())
         .map((m, i) => ({ moduleNo: i + 1, titleBn: m.titleBn.trim(), topics: lines(m.topics) })),
-      media: [...keptImages, ...lines(form.videos).map((url) => ({ kind: "video" as const, url }))],
+      media: [
+        ...lines(form.images).map((url) => ({ kind: "image" as const, url })),
+        ...lines(form.videos).map((url) => ({ kind: "video" as const, url })),
+      ],
     };
   }
 
@@ -102,6 +109,7 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
       return setMessage({ ok: false, text: "স্লাগে শুধু ছোট হাতের ইংরেজি অক্ষর, সংখ্যা ও হাইফেন (-) দিন।" });
     }
     if (!(Number(form.price) >= 0) || form.price.trim() === "") return setMessage({ ok: false, text: "সঠিক ফি দিন (০ হলে ফ্রি)।" });
+    if (mediaCount(form) > 20) return setMessage({ ok: false, text: "ছবি ও ভিডিও মিলিয়ে সর্বোচ্চ ২০টি দেওয়া যাবে।" });
 
     setPending(true);
     setMessage(null);
@@ -257,15 +265,15 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
           <Field label="প্রশিক্ষকের নাম" id="trainerName">
             <input id="trainerName" value={form.trainerName} onChange={(e) => set({ trainerName: e.target.value })} className={inputClass} />
           </Field>
-          <Field label="প্রশিক্ষকের ছবির লিংক" id="trainerPhoto" hint="https://… (ছবির সরাসরি লিংক)">
-            <input
-              id="trainerPhoto"
-              type="url"
-              value={form.trainerPhoto}
-              onChange={(e) => set({ trainerPhoto: e.target.value })}
-              className={inputClass}
-            />
-          </Field>
+          <UploadField
+            id="trainerPhoto"
+            label="প্রশিক্ষকের ছবি"
+            hint="ছবি আপলোড করুন, অথবা সরাসরি লিংক দিন (সর্বোচ্চ ৫ MB)"
+            value={form.trainerPhoto}
+            onChange={(url) => set({ trainerPhoto: url })}
+            folder="trainers"
+            accept="image/jpeg,image/png,image/webp"
+          />
         </div>
         <Field label="প্রশিক্ষক পরিচিতি" id="trainerBio">
           <textarea
@@ -276,13 +284,29 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
             className={`${inputClass} py-2`}
           />
         </Field>
-        <Field label="কভার ছবির লিংক" id="coverImage" hint="https:// দিয়ে শুরু হতে হবে">
-          <input id="coverImage" type="url" value={form.coverImage} onChange={(e) => set({ coverImage: e.target.value })} className={inputClass} />
+        <UploadField
+          id="coverImage"
+          label="কভার ছবি"
+          hint="কোর্স কার্ড ও কোর্স পেজের উপরে দেখাবে। ১৬:৯ মাপের ছবি ভালো দেখায় (সর্বোচ্চ ৫ MB)।"
+          value={form.coverImage}
+          onChange={(url) => set({ coverImage: url })}
+          folder="courses"
+          accept="image/jpeg,image/png,image/webp"
+        />
+        <Field label="কোর্সের ছবি (প্রতি লাইনে একটি লিংক)" id="images" hint="কোর্স পেজে “ছবি” অংশে গ্যালারি আকারে দেখাবে।">
+          <textarea
+            id="images"
+            rows={3}
+            value={form.images}
+            onChange={(e) => set({ images: e.target.value })}
+            className={`${inputClass} py-2 font-mono text-sm`}
+          />
         </Field>
+        <MediaUploadButton kind="image" onUploaded={addLine("images")} />
         <Field
-          label="ভিডিও লিংক (প্রতি লাইনে একটি)"
+          label="ভিডিও (প্রতি লাইনে একটি লিংক)"
           id="videos"
-          hint="আনলিস্টেড YouTube বা Vimeo লিংক। কোর্স পেজে ভিডিও আকারে দেখাবে।"
+          hint="ভিডিও ফাইল আপলোড করুন (MP4/WebM/MOV, সর্বোচ্চ ৫০০ MB), অথবা আনলিস্টেড YouTube / Vimeo লিংক দিন।"
         >
           <textarea
             id="videos"
@@ -292,6 +316,7 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
             className={`${inputClass} py-2 font-mono text-sm`}
           />
         </Field>
+        <MediaUploadButton kind="video" onUploaded={addLine("videos")} />
       </Section>
 
       {message && (
@@ -309,6 +334,10 @@ export function CourseForm({ course }: { course?: AdminCourse }) {
       </button>
     </form>
   );
+}
+
+function mediaCount(form: { images: string; videos: string }) {
+  return `${form.images}\n${form.videos}`.split("\n").filter((l) => l.trim()).length;
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {

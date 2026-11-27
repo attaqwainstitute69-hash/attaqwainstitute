@@ -6,13 +6,12 @@ import { getDictionary, getLocale } from "@/i18n/dictionaries";
 import { formatNumber } from "@/lib/format";
 import { site } from "@/lib/site";
 import { Suspense } from "react";
+import { Accent, ArrowIcon, ButtonLink, SectionHeading } from "@/components/ui";
 import {
-  Accent,
   ContactCta,
   FeaturedCourses,
   HeroBadge,
   HeroCourse,
-  SectionHeading,
   Methodology,
   MonitoringTeaser,
   PartnerInstitutions,
@@ -78,18 +77,13 @@ export default async function HomePage() {
             </h1>
             <p className="mt-6 max-w-xl text-lg text-white/80">{t.Home.heroText}</p>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Link
-                href={localePath(locale, "/courses")}
-                className="inline-flex min-h-12 items-center rounded-full bg-gold-cta px-7 font-semibold text-primary-dark transition hover:glow-gold"
-              >
+              <ButtonLink href={localePath(locale, "/courses")} size="lg" pill>
                 {t.Home.ctaPrograms}
-              </Link>
-              <Link
-                href={localePath(locale, "/consultancy")}
-                className="inline-flex min-h-12 items-center rounded-full border border-white/50 px-7 font-semibold hover:bg-white/10"
-              >
+                <ArrowIcon />
+              </ButtonLink>
+              <ButtonLink href={localePath(locale, "/consultancy")} variant="ghost" size="lg" pill>
                 {t.Home.ctaConsult}
-              </Link>
+              </ButtonLink>
             </div>
           </div>
           <div data-reveal="zoom" className="mx-auto w-full max-w-md">
@@ -155,10 +149,11 @@ export default async function HomePage() {
       <Suspense fallback={<SectionFallback />}>
         <FeaturedCourses locale={locale} t={t} />
       </Suspense>
-      <Methodology locale={locale} t={t} />
-      <Suspense fallback={<SectionFallback dark />}>
-        <Stats locale={locale} t={t} />
-      </Suspense>
+      <Methodology locale={locale} t={t}>
+        <Suspense fallback={null}>
+          <Stats locale={locale} t={t} />
+        </Suspense>
+      </Methodology>
 
       {/* Mission & Vision (PRD §1.3) */}
       {/* Image + text pairing from the reference design: the logo on a navy panel beside mission and vision. */}
@@ -244,6 +239,6 @@ function Sparkle({ className = "" }: { className?: string }) {
   );
 }
 
-function SectionFallback({ dark = false }: { dark?: boolean }) {
-  return <div aria-hidden="true" className={`h-72 animate-pulse ${dark ? "bg-primary-dark" : "bg-neutral-light"}`} />;
+function SectionFallback() {
+  return <div aria-hidden="true" className="h-72 animate-pulse bg-neutral-light" />;
 }

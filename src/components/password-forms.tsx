@@ -285,7 +285,7 @@ export function ChangePasswordForm({
       <button
         type="submit"
         disabled={state.status === "pending"}
-        className="inline-flex min-h-11 items-center rounded-md bg-navy px-5 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
+        className="inline-flex min-h-11 items-center rounded-md bg-navy dark:border dark:border-white/20 px-5 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
       >
         {state.status === "pending" ? auth.submitting : hasPassword ? t.changePassword : t.setPassword}
       </button>

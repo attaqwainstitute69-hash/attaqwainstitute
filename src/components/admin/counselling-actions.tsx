@@ -81,7 +81,7 @@ export function AssignCounsellor({ caseId, counsellors, assignedId }: { caseId: 
             type="button"
             onClick={assign}
             disabled={pending || !counsellorId || counsellorId === assignedId}
-            className="mt-3 inline-flex min-h-11 items-center rounded-md bg-navy px-5 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
+            className="mt-3 inline-flex min-h-11 items-center rounded-md bg-navy dark:border dark:border-white/20 px-5 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
           >
             {pending ? "নির্ধারণ হচ্ছে…" : "নির্ধারণ করুন"}
           </button>

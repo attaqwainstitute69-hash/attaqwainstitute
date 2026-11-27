@@ -25,7 +25,7 @@ export function ResourceDownload({ id, locale, t }: { id: string; locale: Locale
         type="button"
         onClick={download}
         disabled={pending}
-        className="inline-flex min-h-11 items-center rounded-md bg-navy px-4 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
+        className="inline-flex min-h-11 items-center rounded-md bg-navy dark:border dark:border-white/20 px-4 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
       >
         {pending ? t.downloading : `↓ ${t.download}`}
       </button>

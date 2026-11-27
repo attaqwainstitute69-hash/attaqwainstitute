@@ -2,6 +2,9 @@
 export const site = {
   name: { bn: "আত-তাকওয়া ইনস্টিটিউট", en: "At-Taqwa Institute" },
   address: { bn: "ব্যাংক কলোনি, সাভার, ঢাকা", en: "Bank Colony, Savar, Dhaka" },
+  // Pin from the institute's Google Maps share link (maps.app.goo.gl/kmUSbhZNUPssqvk16).
+  location: { lat: 23.844587, lng: 90.250535 },
+  mapLink: "https://maps.app.goo.gl/kmUSbhZNUPssqvk16",
   phones: ["01612417120"], // TODO: second number "019995011" is incomplete (PRD open question #1)
   // TODO: PRD lists WhatsApp as 01400189683 in §1.8 but uses 8801619995011 in F8 — confirm which is correct.
   whatsapp: "8801400189683",
@@ -11,3 +14,5 @@ export const site = {
 } as const;
 
 export const whatsappLink = `https://wa.me/${site.whatsapp}`;
+
+export const mapEmbedUrl = `https://maps.google.com/maps?q=${site.location.lat},${site.location.lng}&z=16&output=embed`;

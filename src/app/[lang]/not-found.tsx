@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { localePath } from "@/i18n/config";
 import { getDictionary, getLocale } from "@/i18n/dictionaries";
+import { ButtonLink } from "@/components/ui";
 
 export default async function NotFound() {
   const locale = await getLocale();
@@ -11,12 +11,9 @@ export default async function NotFound() {
       <p className="text-6xl font-bold text-gold-text">{locale === "bn" ? "৪০৪" : "404"}</p>
       <h1 className="mt-4 text-3xl font-bold text-primary">{t.NotFound.title}</h1>
       <p className="mt-4 text-ink-soft">{t.NotFound.text}</p>
-      <Link
-        href={localePath(locale)}
-        className="mt-8 inline-flex min-h-11 items-center rounded-md bg-navy px-6 font-semibold text-white hover:bg-primary-dark"
-      >
+      <ButtonLink href={localePath(locale)} pill className="mt-8">
         {t.NotFound.home}
-      </Link>
+      </ButtonLink>
     </section>
   );
 }

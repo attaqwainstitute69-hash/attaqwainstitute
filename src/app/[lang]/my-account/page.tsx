@@ -12,6 +12,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { ChangePasswordForm } from "@/components/password-forms";
 import { ResubmitForm } from "@/components/resubmit-form";
 import { Stars } from "@/components/reviews/review-card";
+import { EmptyState } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -116,7 +117,7 @@ async function Account({ locale, t }: { locale: Locale; t: Dictionary }) {
             {t.Reviews.write} →
           </Link>
         </div>
-        {reviews && reviews.length > 0 && (
+        {reviews && reviews.length > 0 ? (
           <ul className="mt-4 space-y-3">
             {reviews.map((r) => (
               <li key={r._id}>
@@ -124,6 +125,8 @@ async function Account({ locale, t }: { locale: Locale; t: Dictionary }) {
               </li>
             ))}
           </ul>
+        ) : (
+          reviews && <EmptyState className="mt-4">{t.Reviews.myReviewsEmpty}</EmptyState>
         )}
       </section>
 

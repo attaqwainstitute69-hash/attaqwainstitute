@@ -131,6 +131,7 @@
   },
   "Common": {
     "whatsapp": "Chat on WhatsApp",
+    "skipToContent": "Skip to main content",
     "bengaliOnly": "This content is currently available in Bengali only."
   },
   "Chat": {
@@ -157,6 +158,7 @@
     "empty": "No courses match this filter.",
     "unavailable": "Course information can't be loaded right now. Please try again shortly or contact us on WhatsApp.",
     "loading": "Loading courses…",
+    "listHeading": "Course list",
     "nextBatch": "Next batch",
     "noBatch": "New batch dates will be announced soon",
     "seatsLeft": "{n} seats left",
@@ -164,6 +166,7 @@
     "details": "View details",
     "enroll": "Enroll",
     "reviews": "{n} reviews",
+    "reviewsOne": "{n} review",
     "prev": "Previous",
     "next": "Next",
     "page": "Page {page} of {total}",
@@ -186,7 +189,10 @@
     "noBatches": "There is no active batch right now. Contact us on WhatsApp to hear about the next one.",
     "notFound": "Course not found.",
     "closed": "Enrollment for this course is closed.",
-    "videos": "Videos"
+    "videos": "Videos",
+    "gallery": "Photos",
+    "paymentMethods": "Payment methods",
+    "paymentMethodsText": "Send the course fee by bKash or Nagad, then apply with the transaction ID."
   },
   "Enroll": {
     "title": "Apply for this course",
@@ -195,8 +201,9 @@
     "login": "Log in",
     "register": "Register",
     "chooseBatch": "Choose a batch",
-    "step1": "1. Send the course fee of {fee} to the number below (use the Send Money option).",
-    "step2": "2. Enter the number you paid from and the transaction ID (TrxID).",
+    "steps": ["Send the fee", "Enter TrxID", "We verify"],
+    "step1": "Send the course fee of {fee} to the number below (use the Send Money option).",
+    "step2": "Enter the number you paid from and the transaction ID (TrxID).",
     "merchantMissing": "Contact us on WhatsApp for the payment number.",
     "method": "Payment method",
     "bkash": "bKash",
@@ -374,6 +381,7 @@
     "submitted": "Thank you! Your review has been submitted and will be published after approval.",
     "backToAccount": "Back to my account",
     "myReviews": "My reviews",
+    "myReviewsEmpty": "You haven't written a review yet. Share your experience after a course to help other teachers and parents.",
     "status": {
       "pending": "Under review",
       "approved": "Published",

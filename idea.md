@@ -434,7 +434,7 @@ The architecture (Next.js + Supabase) supports adding LMS, monitoring system, an
 ## Contact
 
 - **Address:** Bank Colony, Savar, Dhaka
-- **Phone:** 01612417120, 019995011 *(⚠️ confirm second number)*
-- **WhatsApp:** 01400189683
+- **Phone:**  +880 19995011 / +880 1641-176100 
+- **WhatsApp:** 0161995011
 - **Email:** Attaqwainstitute69@gmail.com
 - **Facebook:** https://www.facebook.com/share/1RmdWwcFXq/

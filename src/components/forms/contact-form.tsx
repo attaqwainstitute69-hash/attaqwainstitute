@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { whatsappLink } from "@/lib/site";
+import { WhatsAppLogo } from "@/components/whatsapp-button";
 
 type Props = { t: Dictionary["Contact"]; errors: Dictionary["Errors"] };
 
@@ -122,11 +123,10 @@ export function ContactForm({ t, errors }: Props) {
 
       <button
         type="submit"
-        className="inline-flex min-h-12 items-center gap-2 rounded-full bg-navy px-7 font-semibold text-white transition hover:bg-navy-light"
+        className="inline-flex min-h-12 items-center gap-2 rounded-full bg-navy dark:border dark:border-white/20 px-7 font-semibold text-white transition hover:bg-navy-light"
       >
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" />
-        </svg>
+        {/* The form opens WhatsApp, so the button carries its logo. */}
+        <WhatsAppLogo className="size-7" />
         {f.send}
       </button>
       {sent && (

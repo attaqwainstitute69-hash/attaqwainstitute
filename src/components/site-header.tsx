@@ -3,9 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
+import { whatsappLink } from "@/lib/site";
+import { ButtonAnchor } from "@/components/ui";
+import { WhatsAppGlyph } from "@/components/whatsapp-button";
 
 // Main navigation (PRD §3.1)
 const navItems = [
@@ -20,11 +23,19 @@ const navItems = [
 ] as const;
 
 // `auth` is the login / my-account button, rendered on the server because the session cookie is HTTP-only.
-type Props = { locale: Locale; t: Dictionary["Nav"]; auth: ReactNode; theme: ReactNode };
+type Props = { locale: Locale; t: Dictionary["Nav"]; whatsapp: string; auth: ReactNode; theme: ReactNode };
 
-export function SiteHeader({ locale, t, auth, theme }: Props) {
+export function SiteHeader({ locale, t, whatsapp, auth, theme }: Props) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+
+  // Escape closes the mobile menu.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   // usePathname() is request data on dynamic routes, so the parts that read it stream in behind
   // Suspense. The fallbacks render the same markup without the active-link state.
@@ -35,11 +46,11 @@ export function SiteHeader({ locale, t, auth, theme }: Props) {
   );
 
   return (
-    // Navy in both themes so it runs straight into the hero, as in the reference design.
-    <header className="site-header sticky top-0 z-40 border-b border-white/10 bg-primary-dark/95 text-white backdrop-blur transition-shadow">
+    // Near-black glass in both themes so it runs straight into the hero, as in the reference design.
+    <header className="site-header sticky top-0 z-40 border-b border-white/10 bg-primary-dark/80 text-white backdrop-blur-md transition-shadow">
       <div aria-hidden="true" className="scroll-progress absolute inset-x-0 bottom-0 h-0.5 bg-gold-cta" />
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-        <Link href={localePath(locale)} className="flex shrink-0 items-center gap-2.5">
+        <Link href={localePath(locale)} aria-label={locale === "bn" ? "আত-তাকওয়া ইনস্টিটিউট — হোম" : "At-Taqwa Institute — Home"} className="flex shrink-0 items-center gap-2.5">
           <span className="rounded-lg bg-white p-0.5">
             <Image src="/logo.png" alt="" width={50} height={40} priority className="h-10 w-auto" />
           </span>
@@ -49,8 +60,9 @@ export function SiteHeader({ locale, t, auth, theme }: Props) {
           </span>
         </Link>
 
+        {/* Pill nav (Lawyer landing-page reference). */}
         <nav aria-label={t.menu} className="hidden xl:block">
-          <ul className="flex items-center">{links}</ul>
+          <ul className="flex items-center gap-0.5 rounded-full border border-white/10 bg-white/[0.04] p-1">{links}</ul>
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -75,8 +87,12 @@ export function SiteHeader({ locale, t, auth, theme }: Props) {
       </div>
 
       {open && (
-        <nav id="mobile-nav" aria-label={t.menu} className="border-t border-white/10 px-4 pb-4 xl:hidden">
-          <ul className="flex flex-col">{links}</ul>
+        <nav id="mobile-nav" aria-label={t.menu} className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto border-t border-white/10 px-4 pt-2 pb-5 xl:hidden">
+          <ul className="grid gap-1 sm:grid-cols-2">{links}</ul>
+          <ButtonAnchor href={whatsappLink} target="_blank" rel="noopener noreferrer" pill block className="mt-4 sm:w-auto">
+            <WhatsAppGlyph size={20} />
+            {whatsapp}
+          </ButtonAnchor>
         </nav>
       )}
     </header>
@@ -99,7 +115,7 @@ function NavLinks({ locale, t, pathname, onNavigate }: LinkProps & { pathname: s
           href={href}
           aria-current={active ? "page" : undefined}
           onClick={onNavigate}
-          className="block rounded-full px-3 py-2.5 text-[0.95rem] whitespace-nowrap text-white/80 transition hover:text-white xl:px-2.5 xl:text-sm aria-[current=page]:font-semibold aria-[current=page]:text-accent-gold-light"
+          className="block rounded-lg px-3 py-3 text-[0.95rem] whitespace-nowrap text-white/80 transition hover:bg-white/5 hover:text-white aria-[current=page]:bg-white/10 aria-[current=page]:font-semibold aria-[current=page]:text-accent-gold-light xl:rounded-full xl:px-3 xl:py-1.5 xl:text-sm"
         >
           {t[key]}
         </Link>

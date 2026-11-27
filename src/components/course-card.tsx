@@ -46,7 +46,7 @@ export function CourseCard({ course, locale, t }: Props) {
         {course.totalReviews > 0 && (
           <p className="mt-1 text-sm text-ink-soft">
             <span aria-hidden="true" className="text-accent-gold">★</span> {formatNumber(course.averageRating, locale)} ·{" "}
-            {fill(t.reviews, { n: formatNumber(course.totalReviews, locale) })}
+            {fill(course.totalReviews === 1 ? t.reviewsOne : t.reviews, { n: formatNumber(course.totalReviews, locale) })}
           </p>
         )}
 
@@ -77,15 +77,8 @@ export function CourseCard({ course, locale, t }: Props) {
           )}
         </p>
 
-        <div className="mt-4 flex gap-2">
-          {canEnroll && (
-            <Link
-              href={`${href}#enroll`}
-              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-navy px-4 text-sm font-semibold text-white transition hover:bg-navy-light"
-            >
-              {t.enroll}
-            </Link>
-          )}
+        <div className="mt-4 flex items-center gap-2">
+          {canEnroll && <EnrollImageLink href={`${href}#enroll`} label={t.enroll} className="flex-1" />}
           <Link
             href={href}
             className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-primary/40 px-4 text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary-50"
@@ -98,20 +91,34 @@ export function CourseCard({ course, locale, t }: Props) {
   );
 }
 
+// "Enroll now" banner artwork (public/enroll-now.png) used as the enroll button.
+// The artwork's text is English, so the localized label is the accessible name.
+export function EnrollImageLink({ href, label, className = "", imgClass = "h-14" }: { href: string; label: string; className?: string; imgClass?: string }) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      className={`inline-flex min-h-11 items-center justify-center rounded-lg transition hover:scale-105 focus-visible:outline-3 focus-visible:outline-accent-gold ${className}`}
+    >
+      <Image src="/enroll-now.png" alt="" width={594} height={442} className={`w-auto drop-shadow-md ${imgClass}`} />
+    </Link>
+  );
+}
+
 // Placeholder cover for courses without an image: the logo's open book under a rising sun.
 export function BookArt({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 160 90" aria-hidden="true" className={`size-full ${className}`}>
-      <g stroke="#f0c75e" strokeWidth="1.5" strokeLinecap="round" opacity="0.8">
+      <g className="stroke-accent-gold-light" strokeWidth="1.5" strokeLinecap="round" opacity="0.8">
         {[-60, -40, -20, 0, 20, 40, 60].map((a) => (
           <line key={a} x1="80" y1="38" x2="80" y2="14" transform={`rotate(${a} 80 46)`} />
         ))}
       </g>
-      <circle cx="80" cy="46" r="13" fill="#e8912a" />
-      <path d="M80 50 C66 44 54 44 44 47 V74 C54 71 66 71 80 77 Z" fill="#fdf8ef" />
+      <circle cx="80" cy="46" r="13" className="fill-accent-orange" />
+      <path d="M80 50 C66 44 54 44 44 47 V74 C54 71 66 71 80 77 Z" fill="#f6f9ef" />
       <path d="M80 50 C94 44 106 44 116 47 V74 C106 71 94 71 80 77 Z" fill="#fff" />
-      <path d="M80 50 V77" stroke="#d4a843" strokeWidth="1.5" />
-      <path d="M36 78 C56 72 70 76 80 80 C90 76 104 72 124 78" fill="none" stroke="#d4a843" strokeWidth="2" strokeLinecap="round" />
+      <path d="M80 50 V77" className="stroke-accent-gold" strokeWidth="1.5" />
+      <path d="M36 78 C56 72 70 76 80 80 C90 76 104 72 124 78" fill="none" className="stroke-accent-gold" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

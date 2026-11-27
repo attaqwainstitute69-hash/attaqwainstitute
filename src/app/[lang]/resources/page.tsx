@@ -9,6 +9,7 @@ import { fill, formatDate, formatNumber } from "@/lib/format";
 import type { ResourceCategory } from "@/lib/api-types";
 import { PageHero } from "@/components/page-hero";
 import { ResourceDownload } from "@/components/resource-download";
+import { tabClass } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -73,7 +74,7 @@ async function ResourceList({ searchParams, locale, t }: { searchParams: Promise
               key={tab.label}
               href={href({ category: tab.value, page: undefined })}
               aria-current={category === tab.value ? "page" : undefined}
-              className="inline-flex min-h-11 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=page]:border-primary aria-[current=page]:bg-navy aria-[current=page]:text-white"
+              className={tabClass}
             >
               {tab.label}
             </Link>
@@ -91,7 +92,7 @@ async function ResourceList({ searchParams, locale, t }: { searchParams: Promise
             aria-label={tr.searchPlaceholder}
             className="min-h-11 w-full rounded-md border border-neutral-sky bg-surface px-3 lg:w-64"
           />
-          <button type="submit" className="min-h-11 rounded-md bg-navy px-4 font-semibold text-white hover:bg-navy-light">
+          <button type="submit" className="min-h-11 rounded-md bg-navy dark:border dark:border-white/20 px-4 font-semibold text-white hover:bg-navy-light">
             {tr.search}
           </button>
         </form>

@@ -74,7 +74,7 @@ export function WaitlistButton({ locale, loggedIn, onWaitlist, course, t, errors
         type="button"
         onClick={join}
         disabled={pending}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-navy px-5 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-navy dark:border dark:border-white/20 px-5 font-semibold text-white hover:bg-navy-light disabled:opacity-60"
       >
         {pending ? t.waitlistJoining : t.joinWaitlist}
       </button>

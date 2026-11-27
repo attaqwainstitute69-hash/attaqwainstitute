@@ -62,10 +62,6 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Suspense fallback={null}>
-        <Stats locale={locale} t={t} />
-      </Suspense>
-
       <section className="mx-auto max-w-7xl px-4 py-14">
         <h2 className="text-2xl font-bold text-primary md:text-3xl">{ta.pillarsTitle}</h2>
         <ul className="mt-8 grid gap-6 md:grid-cols-3">
@@ -83,7 +79,11 @@ export default async function AboutPage() {
         </ul>
       </section>
 
-      <Methodology locale={locale} t={t} />
+      <Methodology locale={locale} t={t}>
+        <Suspense fallback={null}>
+          <Stats locale={locale} t={t} />
+        </Suspense>
+      </Methodology>
 
       <section className="mx-auto max-w-7xl px-4 py-14">
         <p className="inline-flex rounded-full bg-neutral-sky/30 px-3 py-1 text-sm text-primary">{t.Home.liveModelBadge}</p>

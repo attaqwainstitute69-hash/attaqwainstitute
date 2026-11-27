@@ -2,7 +2,7 @@
 
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { PaymentMethod } from "@/lib/api-types";
-import { PaymentIcon } from "./payment-icons";
+import { PaymentLogo } from "./payment-icons";
 
 export type PaymentValues = { paymentMethod: PaymentMethod; senderNumber: string; trxId: string };
 
@@ -30,11 +30,12 @@ export function PaymentFields({ values, onChange, errors, t, idPrefix }: Props) 
     <>
       <fieldset>
         <legend className="text-sm font-medium text-primary">{t.method}</legend>
-        <div className="mt-2 flex gap-2">
+        {/* Logo cards, as in the checkout reference: white tiles, the chosen one ringed in lime. */}
+        <div className="mt-2 grid grid-cols-2 gap-3">
           {(["bkash", "nagad"] as const).map((m) => (
             <label
               key={m}
-              className="flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-neutral-sky text-sm has-checked:border-primary has-checked:bg-primary-50"
+              className="relative flex min-h-16 cursor-pointer items-center justify-center rounded-xl border-2 border-neutral-sky bg-white px-3 shadow-sm transition has-checked:border-accent-gold has-checked:shadow-md has-focus-visible:outline-3 has-focus-visible:outline-accent-gold"
             >
               <input
                 type="radio"
@@ -42,9 +43,16 @@ export function PaymentFields({ values, onChange, errors, t, idPrefix }: Props) 
                 value={m}
                 checked={values.paymentMethod === m}
                 onChange={() => set({ paymentMethod: m })}
+                className="peer sr-only"
               />
-              <PaymentIcon method={m} className="size-5" />
-              {t[m]}
+              <PaymentLogo method={m} />
+              <span className="sr-only">{t[m]}</span>
+              <span
+                aria-hidden="true"
+                className="absolute top-1.5 right-1.5 hidden size-5 items-center justify-center rounded-full bg-accent-gold text-xs font-bold text-primary-dark peer-checked:flex"
+              >
+                ✓
+              </span>
             </label>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatNumber } from "@/lib/format";
+import { tabClass } from "@/components/ui";
 
 // Filter pills and pager shared by the admin list pages (same look as /admin/reviews).
 export function FilterTabs({ label, options, current, href }: {
@@ -15,7 +16,7 @@ export function FilterTabs({ label, options, current, href }: {
           key={o.value}
           href={href(o.value)}
           aria-current={current === o.value ? "true" : undefined}
-          className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-navy aria-[current=true]:text-white"
+          className={tabClass}
         >
           {o.label}
         </Link>
@@ -58,7 +59,7 @@ export function SearchBox({ action, q, placeholder, hidden = {} }: { action: str
         aria-label={placeholder}
         className="min-h-11 w-full rounded-md border border-neutral-sky bg-surface px-3 md:w-72"
       />
-      <button type="submit" className="min-h-11 rounded-md bg-navy px-4 font-semibold text-white hover:bg-navy-light">
+      <button type="submit" className="min-h-11 rounded-md bg-navy dark:border dark:border-white/20 px-4 font-semibold text-white hover:bg-navy-light">
         খুঁজুন
       </button>
     </form>

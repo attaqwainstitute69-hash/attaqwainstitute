@@ -51,8 +51,8 @@ Visitors to attaqwainstitute.com: madrasa teachers (Maktab, Nazera, Hifz, Kitab)
 - Not available in V1 (PRD §5): certificates are issued manually after course completion evaluation (no automatic certificates or QR verification yet). There is no full LMS; course videos are unlisted YouTube/Vimeo embeds. The 9-Step monitoring software itself is not live, only its introduction, walkthrough and institutional waitlist. There is no mobile app; the website works on phones. There is no card/online payment gateway; payment is by bKash/Nagad TrxID. Notifications come by email, not SMS or WhatsApp bots; users can still chat on WhatsApp. Client institutions do not get their own login portal; the consultancy team coordinates with them. There is no online book shop; publications are offline or PDFs in the Knowledge Hub.
 
 # Contact
-- Phone: 01612417120
-- WhatsApp: https://wa.me/8801400189683
+- Phone: 01619995011
+- WhatsApp: https://wa.me/8801619995011
 - Email: Attaqwainstitute69@gmail.com
 - Address: Bank Colony, Savar, Dhaka
 

@@ -6,7 +6,9 @@ import { getDictionary, getLocale, type Dictionary } from "@/i18n/dictionaries";
 import { getCourses } from "@/lib/api";
 import { fill, formatNumber } from "@/lib/format";
 import { whatsappLink } from "@/lib/site";
+import { Button, Card, EmptyState, Input, buttonClass, tabClass } from "@/components/ui";
 import { CourseCard } from "@/components/course-card";
+import { CardGridSkeleton } from "@/components/ui/skeleton";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -40,7 +42,9 @@ export default async function CoursesPage({ searchParams }: PageProps<"/[lang]/c
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-10">
-        <Suspense fallback={<p className="py-10 text-center text-ink-soft">{t.Courses.loading}</p>}>
+        {/* Course cards use h3; this keeps the outline h1 → h2 → h3. */}
+        <h2 className="sr-only">{t.Courses.listHeading}</h2>
+        <Suspense fallback={<CardGridSkeleton label={t.Courses.loading} />}>
           <CourseList searchParams={searchParams} locale={locale} t={t.Courses} />
         </Suspense>
       </div>
@@ -84,7 +88,7 @@ async function CourseList({
       key={label}
       href={to}
       aria-current={active ? "true" : undefined}
-      className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-navy aria-[current=true]:text-white"
+      className={tabClass}
     >
       {label}
     </Link>
@@ -92,35 +96,31 @@ async function CourseList({
 
   return (
     <>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      {/* Filter panel: each tab row carries a visible label, since both start with "All". */}
+      <Card className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t.formatLabel}>
-            {tab(t.all, !format, href({ format: undefined }))}
-            {FORMATS.map((f) => tab(t.format[f], format === f, href({ format: f })))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t.pillarLabel}>
-            {tab(t.all, !pillar, href({ pillar: undefined }))}
-            {PILLARS.map((p) => tab(t.pillar[p], pillar === p, href({ pillar: p })))}
-          </div>
+          {[
+            { label: t.formatLabel, tabs: [tab(t.all, !format, href({ format: undefined })), ...FORMATS.map((f) => tab(t.format[f], format === f, href({ format: f })))] },
+            { label: t.pillarLabel, tabs: [tab(t.all, !pillar, href({ pillar: undefined })), ...PILLARS.map((p) => tab(t.pillar[p], pillar === p, href({ pillar: p })))] },
+          ].map((row) => (
+            <div key={row.label} className="flex flex-wrap items-center gap-2" role="group" aria-label={row.label}>
+              <span aria-hidden="true" className="w-full text-xs font-semibold tracking-wider text-ink-soft uppercase sm:w-20">
+                {row.label}
+              </span>
+              {row.tabs}
+            </div>
+          ))}
         </div>
 
         <form action={base} className="flex gap-2" role="search">
           {format && <input type="hidden" name="format" value={format} />}
           {pillar && <input type="hidden" name="pillar" value={pillar} />}
-          <input
-            type="search"
-            name="q"
-            defaultValue={q}
-            maxLength={100}
-            placeholder={t.searchPlaceholder}
-            aria-label={t.searchPlaceholder}
-            className="min-h-11 w-full rounded-md border border-neutral-sky bg-surface px-3 lg:w-64"
-          />
-          <button type="submit" className="min-h-11 rounded-md bg-navy px-4 font-semibold text-white hover:bg-navy-light">
+          <Input type="search" name="q" defaultValue={q} maxLength={100} placeholder={t.searchPlaceholder} aria-label={t.searchPlaceholder} className="lg:w-64" />
+          <Button type="submit" variant="dark">
             {t.search}
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
 
       {!result ? (
         <p className="mt-10 rounded-xl border border-accent-orange/40 bg-surface p-6 text-center text-ink-soft">
@@ -130,7 +130,7 @@ async function CourseList({
           </a>
         </p>
       ) : result.items.length === 0 ? (
-        <p className="mt-10 text-center text-ink-soft">{t.empty}</p>
+        <EmptyState className="mt-8">{t.empty}</EmptyState>
       ) : (
         <>
           <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -144,7 +144,7 @@ async function CourseList({
           {result.meta.totalPages > 1 && (
             <nav className="mt-10 flex items-center justify-center gap-4 text-sm" aria-label={t.page}>
               {page > 1 && (
-                <Link href={href({ page: page - 1 })} className="rounded-md border border-neutral-sky px-4 py-2 hover:bg-primary-50">
+                <Link href={href({ page: page - 1 })} className={buttonClass({ variant: "secondary", size: "sm" })}>
                   ← {t.prev}
                 </Link>
               )}
@@ -152,7 +152,7 @@ async function CourseList({
                 {fill(t.page, { page: formatNumber(page, locale), total: formatNumber(result.meta.totalPages, locale) })}
               </span>
               {page < result.meta.totalPages && (
-                <Link href={href({ page: page + 1 })} className="rounded-md border border-neutral-sky px-4 py-2 hover:bg-primary-50">
+                <Link href={href({ page: page + 1 })} className={buttonClass({ variant: "secondary", size: "sm" })}>
                   {t.next} →
                 </Link>
               )}

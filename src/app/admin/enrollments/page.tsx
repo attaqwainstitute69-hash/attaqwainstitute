@@ -8,6 +8,7 @@ import { formatDateTime, formatNumber, formatPrice } from "@/lib/format";
 import { NoAccess } from "@/components/admin/no-access";
 import { EnrollmentActions } from "@/components/admin/enrollment-actions";
 import { PaymentIcon } from "@/components/payment-icons";
+import { tabClass } from "@/components/ui";
 
 export const metadata: Metadata = { title: "এনরোলমেন্ট যাচাই" };
 
@@ -89,7 +90,7 @@ async function Queue({ searchParams }: { searchParams: Promise<Search> }) {
               key={s.value}
               href={href({ status: s.value, page: undefined })}
               aria-current={status === s.value ? "true" : undefined}
-              className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-navy aria-[current=true]:text-white"
+              className={tabClass}
             >
               {s.label}
             </Link>
@@ -119,7 +120,7 @@ async function Queue({ searchParams }: { searchParams: Promise<Search> }) {
             aria-label="TrxID, মোবাইল নম্বর বা টোকেন দিয়ে খুঁজুন"
             className="min-h-11 w-56 rounded-md border border-neutral-sky bg-surface px-3"
           />
-          <button type="submit" className="min-h-11 rounded-md bg-navy px-4 font-semibold text-white hover:bg-navy-light">
+          <button type="submit" className="min-h-11 rounded-md bg-navy dark:border dark:border-white/20 px-4 font-semibold text-white hover:bg-navy-light">
             খুঁজুন
           </button>
         </form>

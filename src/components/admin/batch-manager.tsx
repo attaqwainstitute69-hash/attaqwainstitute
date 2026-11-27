@@ -93,7 +93,7 @@ export function BatchManager({ courseId, batches, canDelete }: Props) {
               setEditing("new");
               setMessage(null);
             }}
-            className="inline-flex min-h-11 items-center rounded-md bg-navy px-4 text-sm font-semibold text-white hover:bg-navy-light"
+            className="inline-flex min-h-11 items-center rounded-md bg-navy dark:border dark:border-white/20 px-4 text-sm font-semibold text-white hover:bg-navy-light"
           >
             + নতুন ব্যাচ
           </button>

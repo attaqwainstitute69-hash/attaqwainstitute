@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cacheLife } from "next/cache";
@@ -5,40 +6,17 @@ import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { getCourses, getInstitutions, getReviewSummary, getReviews } from "@/lib/api";
 import { courseTitle, fill, formatDate, formatNumber, formatPrice } from "@/lib/format";
-import { site, whatsappLink } from "@/lib/site";
+import { mapEmbedUrl, site, whatsappLink } from "@/lib/site";
 import { extraStats, monitoringSteps, upcomingEvents } from "@/content/home";
-import { BookArt, CourseCard } from "@/components/course-card";
+import { BookArt, CourseCard, EnrollImageLink } from "@/components/course-card";
 import { InstitutionCard } from "@/components/institution-card";
 import { RatingSummary, ReviewCard } from "@/components/reviews/review-card";
+import { Accent, ArrowIcon, ButtonLink, SectionHeading, buttonClass } from "@/components/ui";
 import { Counter } from "./counter";
 
 type Props = { locale: Locale; t: Dictionary };
 
 const whatsappWith = (text: string) => `${whatsappLink}?text=${encodeURIComponent(text)}`;
-
-// Renders `text` with the `mark` phrase in gold, e.g. "Current <gold>courses</gold>". Falls back to plain text.
-export function Accent({ text, mark, dark = false }: { text: string; mark?: string; dark?: boolean }) {
-  const i = mark ? text.indexOf(mark) : -1;
-  if (!mark || i < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, i)}
-      <span className={dark ? "text-accent-gold-light" : "text-gold-text"}>{mark}</span>
-      {text.slice(i + mark.length)}
-    </>
-  );
-}
-
-export function SectionHeading({ title, mark, text, dark = false }: { title: string; mark?: string; text?: string; dark?: boolean }) {
-  return (
-    <div data-reveal className="max-w-3xl">
-      <h2 className={`text-2xl font-bold md:text-4xl md:leading-tight ${dark ? "text-white" : "text-primary"}`}>
-        <Accent text={title} mark={mark} dark={dark} />
-      </h2>
-      {text && <p className={`mt-3 ${dark ? "text-white/80" : "text-ink-soft"}`}>{text}</p>}
-    </div>
-  );
-}
 
 // Hero side card: the next open course on a frosted panel, or the logo badge when there is none.
 export async function HeroCourse({ locale, t }: Props) {
@@ -72,14 +50,9 @@ export async function HeroCourse({ locale, t }: Props) {
           <dd className="font-semibold text-accent-gold-light">{course.nextBatch && formatDate(course.nextBatch.startDate, locale)}</dd>
         </div>
       </dl>
-      <div className="mt-5 flex gap-3">
-        <Link
-          href={`${href}#enroll`}
-          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-gold-cta px-4 font-semibold text-primary-dark hover:glow-gold"
-        >
-          {t.Courses.enroll}
-        </Link>
-        <Link href={href} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-white/40 px-4 font-semibold hover:bg-white/10">
+      <div className="mt-5 flex items-center gap-3">
+        <EnrollImageLink href={`${href}#enroll`} label={t.Courses.enroll} className="flex-1" imgClass="h-16" />
+        <Link href={href} className={buttonClass({ variant: "ghost", pill: true, className: "flex-1" })}>
           {t.Courses.details}
         </Link>
       </div>
@@ -105,12 +78,10 @@ export async function FeaturedCourses({ locale, t }: Props) {
     <section className="mx-auto max-w-7xl px-4 py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <SectionHeading title={t.Home.featuredTitle} mark={t.Home.marks.featured} text={t.Home.featuredText} />
-        <Link
-          href={localePath(locale, "/courses")}
-          className="inline-flex min-h-11 items-center rounded-full bg-gold-cta px-5 font-semibold text-primary-dark hover:glow-gold"
-        >
-          {t.Home.viewAllCourses} →
-        </Link>
+        <ButtonLink href={localePath(locale, "/courses")} pill>
+          {t.Home.viewAllCourses}
+          <ArrowIcon />
+        </ButtonLink>
       </div>
       {courses.length === 0 ? (
         <p className="mt-8 rounded-2xl border border-neutral-sky bg-surface p-8 text-center text-ink-soft">{t.Home.featuredEmpty}</p>
@@ -127,8 +98,9 @@ export async function FeaturedCourses({ locale, t }: Props) {
   );
 }
 
-// S5 — Identify → Develop → Build → Implement → Evaluate (PRD §3.1).
-export function Methodology({ locale, t }: Props) {
+// S5 — Identify → Develop → Build → Implement → Evaluate (PRD §3.1). `children` is the S6 stat row,
+// rendered inside the same dark band so the two read as one section.
+export function Methodology({ locale, t, children }: Props & { children?: ReactNode }) {
   return (
     <section className="bg-hero text-white">
       <div className="mx-auto max-w-7xl px-4 py-16">
@@ -147,6 +119,7 @@ export function Methodology({ locale, t }: Props) {
             </li>
           ))}
         </ol>
+        {children}
       </div>
     </section>
   );
@@ -165,22 +138,26 @@ export async function Stats({ locale, t }: Props) {
     ...extraStats.map((s) => ({ value: s.value, suffix: s.suffix ?? "", label: s.label[locale] })),
   ];
 
+  // One column per stat, so two or three numbers fill the row instead of leaving gaps.
+  const cols = ["", "sm:grid-cols-1", "sm:grid-cols-2", "sm:grid-cols-3", "sm:grid-cols-2 lg:grid-cols-4"][Math.min(stats.length, 4)];
+
   return (
-    <section className="bg-primary-dark text-white">
-      <div className="mx-auto max-w-7xl px-4 py-14">
-        <h2 className="sr-only">{t.Home.statsTitle}</h2>
-        <ul data-reveal-stagger className={`grid gap-6 text-center sm:grid-cols-2 ${stats.length >= 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
-          {stats.map((s) => (
-            <li key={s.label} className="rounded-xl border border-white/10 bg-white/5 p-6">
-              <p className="text-4xl font-bold text-accent-gold-light md:text-5xl">
-                <Counter value={s.value} suffix={s.suffix} locale={locale} />
-              </p>
-              <p className="mt-2 text-white/80">{s.label}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    <div className="mt-14">
+      <h2 className="sr-only">{t.Home.statsTitle}</h2>
+      <ul
+        data-reveal-stagger
+        className={`grid divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] text-center backdrop-blur-sm max-sm:divide-y sm:divide-x ${cols}`}
+      >
+        {stats.map((s) => (
+          <li key={s.label} className="p-6">
+            <p className="text-4xl font-bold text-accent-gold-light md:text-5xl">
+              <Counter value={s.value} suffix={s.suffix} locale={locale} />
+            </p>
+            <p className="mt-2 text-white/80">{s.label}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -204,7 +181,7 @@ export async function PartnerInstitutions({ locale, t }: Props) {
       <div className="mt-8 flex flex-wrap gap-4">
         <Link
           href={`${localePath(locale, "/consultancy")}#request`}
-          className="inline-flex min-h-11 items-center rounded-full border border-primary px-5 font-semibold text-primary hover:bg-primary-50"
+          className={buttonClass({ variant: "secondary", pill: true })}
         >
           {t.Home.institutionsCta} →
         </Link>
@@ -232,7 +209,7 @@ export function MonitoringTeaser({ locale, t }: Props) {
           <p className="mt-4 max-w-2xl text-white/80">{t.Home.monitoringText}</p>
           <Link
             href={`${localePath(locale, "/digital")}#waitlist`}
-            className="mt-8 inline-flex min-h-11 items-center rounded-full bg-gold-cta px-6 font-semibold text-primary-dark hover:glow-gold"
+            className={buttonClass({ pill: true, className: "mt-8" })}
           >
             {t.Home.monitoringCta}
           </Link>
@@ -268,13 +245,13 @@ export async function Reviews({ locale, t }: Props) {
           <div className="flex flex-wrap gap-3">
             <Link
               href={localePath(locale, "/reviews")}
-              className="inline-flex min-h-11 items-center rounded-full border border-primary px-5 font-semibold text-primary hover:bg-surface"
+              className={buttonClass({ variant: "secondary", pill: true })}
             >
               {t.Reviews.viewAll} →
             </Link>
             <Link
               href={localePath(locale, "/reviews/new")}
-              className="inline-flex min-h-11 items-center rounded-full bg-gold-cta px-5 font-semibold text-primary-dark hover:glow-gold"
+              className={buttonClass({ pill: true })}
             >
               {t.Reviews.write}
             </Link>
@@ -351,7 +328,7 @@ export async function UpcomingEvents({ locale, t }: Props) {
                   href={e.registerUrl ?? whatsappWith(e.title[locale])}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex min-h-10 items-center rounded-full bg-gold-cta px-4 text-sm font-semibold text-primary-dark hover:glow-gold"
+                  className={buttonClass({ size: "sm", pill: true, className: "mt-3" })}
                 >
                   {t.Home.eventsRegister}
                 </a>
@@ -366,7 +343,6 @@ export async function UpcomingEvents({ locale, t }: Props) {
 
 // S13 — final CTA, contact details and the Savar map (PRD §3.1).
 export function ContactCta({ locale, t }: Props) {
-  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(site.address.en)}&z=15&output=embed`;
 
   return (
     <section className="bg-hero text-white">
@@ -379,7 +355,7 @@ export function ContactCta({ locale, t }: Props) {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href={localePath(locale, "/register")}
-              className="inline-flex min-h-11 items-center rounded-full bg-gold-cta px-6 font-semibold text-primary-dark hover:glow-gold"
+              className={buttonClass({ pill: true })}
             >
               {t.Home.ctaRegister}
             </Link>
@@ -387,7 +363,7 @@ export function ContactCta({ locale, t }: Props) {
               href={whatsappLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center rounded-full border border-white/40 px-6 font-semibold hover:bg-white/10"
+              className={buttonClass({ variant: "ghost", pill: true })}
             >
               {t.Home.ctaWhatsapp}
             </a>
@@ -413,13 +389,17 @@ export function ContactCta({ locale, t }: Props) {
             </div>
             <div>
               <dt className="text-sm text-accent-gold-light">{t.Home.contactAddress}</dt>
-              <dd>{site.address[locale]}</dd>
+              <dd>
+                <a href={site.mapLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  {site.address[locale]} ↗
+                </a>
+              </dd>
             </div>
           </dl>
         </div>
         <iframe
           data-reveal="zoom"
-          src={mapSrc}
+          src={mapEmbedUrl}
           title={t.Home.mapTitle}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"

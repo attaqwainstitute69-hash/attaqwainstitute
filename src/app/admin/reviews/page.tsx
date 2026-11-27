@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/admin";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { NoAccess } from "@/components/admin/no-access";
 import { ReviewActions } from "@/components/admin/review-actions";
+import { tabClass } from "@/components/ui";
 
 export const metadata: Metadata = { title: "রিভিউ মডারেশন" };
 
@@ -74,7 +75,7 @@ async function Queue({ searchParams }: { searchParams: Promise<Search> }) {
             key={s.value}
             href={href({ status: s.value, page: undefined })}
             aria-current={status === s.value ? "true" : undefined}
-            className="inline-flex min-h-10 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=true]:border-primary aria-[current=true]:bg-navy aria-[current=true]:text-white"
+            className={tabClass}
           >
             {s.label}
           </Link>

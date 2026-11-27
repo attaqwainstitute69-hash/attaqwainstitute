@@ -6,6 +6,7 @@ import { getDictionary, getLocale, type Dictionary } from "@/i18n/dictionaries";
 import { getReviewSummary, getReviews } from "@/lib/api";
 import { fill, formatNumber } from "@/lib/format";
 import { RatingSummary, ReviewCard } from "@/components/reviews/review-card";
+import { tabClass } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -86,7 +87,7 @@ async function ReviewList({ searchParams, locale, t }: { searchParams: Promise<S
             key={tab.label}
             href={href({ category: tab.value, page: undefined })}
             aria-current={category === tab.value ? "page" : undefined}
-            className="inline-flex min-h-11 items-center rounded-full border border-neutral-sky px-4 text-sm text-primary hover:border-accent-gold aria-[current=page]:border-primary aria-[current=page]:bg-navy aria-[current=page]:text-white"
+            className={tabClass}
           >
             {tab.label}
           </Link>
